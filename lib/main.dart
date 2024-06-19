@@ -1,6 +1,8 @@
 import 'package:autogestion/src/app.dart';
 import 'package:flutter/material.dart';
 
+import 'components/side_menu.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -8,7 +10,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'App Login',
-        home: LoginForm(),
+        home: const SideMenu(),
     );
   }
 }
