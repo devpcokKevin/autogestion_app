@@ -1,4 +1,6 @@
+import 'package:autogestion/entry_point.dart';
 import 'package:flutter/material.dart';
+import 'package:autogestion/screens/home/home_screen.dart';
 
 class LoginForm extends StatefulWidget {
   LoginForm({Key? key}) : super(key: key);
@@ -146,8 +148,12 @@ class LoginFormState extends State<LoginForm> {
                     ),
                   ),
                   onPressed: () {
-                    print('click');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const EntryPoint()),
+                    );
                   },
+
                 ),
               ),
             ],
