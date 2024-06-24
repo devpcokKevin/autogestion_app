@@ -45,16 +45,23 @@ class _SideMenuState extends State<SideMenu> {
               ),
               // here is the icon rive asset because it's animated asset
               ...sideMenus.map(
-                (menu) => SideMenuTile(
+                    (menu) => SideMenuTile(
                   menu: menu,
                   riveonInit: (artboard) {
                     StateMachineController controller =
-                        RiveUtils.getRiveController(artboard,
-                            stateMachineName: menu.stateMachineName);
+                    RiveUtils.getRiveController(artboard,
+                        stateMachineName: menu.stateMachineName);
                     menu.input = controller.findSMI("active") as SMIBool;
                   },
                   press: () {
-                    menu.input!.change(true);
+                    if (menu.view != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => menu.view!),
+                      );
+                    } else {
+                      // Handle case where menu.view is null
+                    }
                     Future.delayed(const Duration(seconds: 1), () {
                       menu.input!.change(false);
                     });

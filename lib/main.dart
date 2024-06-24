@@ -1,3 +1,4 @@
+import 'package:autogestion/generador_qr.dart';
 import 'package:autogestion/screens/home/home_screen.dart';
 import 'package:autogestion/screens/onboding/onboding_screen.dart';
 import 'package:autogestion/screens/qr/scanner.dart';
@@ -36,7 +37,7 @@ class MyApp extends StatelessWidget {
           errorBorder: defaultInputBorder,
         ),
       ),
-      home: QRScanner(),
+      home: LoginForm(),
       debugShowCheckedModeBanner: false,
     );
   }

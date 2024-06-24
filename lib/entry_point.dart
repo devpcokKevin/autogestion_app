@@ -20,7 +20,6 @@ class EntryPoint extends StatefulWidget {
 
 class _EntryPointState extends State<EntryPoint>
     with SingleTickerProviderStateMixin {
-  RiveAsset selectedBottomNav = bottomNavs.first;
 
   late AnimationController _animationController;
   late Animation<double> animation;
