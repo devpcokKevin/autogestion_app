@@ -1,5 +1,6 @@
 import 'dart:ui';
-import 'package:autogestion/screens/qr/scanner.dart';
+import 'package:autogestion/screens/qr/qrScanner.dart';
+import 'package:autogestion/utils/constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,7 +16,7 @@ class ResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: backgroundColorLight,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
@@ -48,7 +49,7 @@ class ResultScreen extends StatelessWidget {
               version: QrVersions.auto,
             ),
             const Text(
-              "Scanned result",
+              "Resultado:",
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black54,

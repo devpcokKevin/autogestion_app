@@ -1,13 +1,14 @@
+import 'dart:convert';
+
 import 'package:autogestion/components/side_menu_tile.dart';
-import 'package:autogestion/models/rive_asset.dart';
-import 'package:autogestion/utils/rive_utils.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/rive_asset.dart';
+import '../utils/rive_utils.dart';
 import 'info_card.dart';
 
-// Welcome to the Episode 5
 class SideMenu extends StatefulWidget {
   final Function(Widget) onMenuItemClicked;
 
@@ -19,6 +20,26 @@ class SideMenu extends StatefulWidget {
 
 class _SideMenuState extends State<SideMenu> {
   RiveAsset selectedMenu = sideMenus.first;
+  String usuarioNombre = "";
+  String usuarioCargo = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? datosUsuarioJson = prefs.getString('datosUsuario');
+    if (datosUsuarioJson != null) {
+      Map<String, dynamic> datosUsuario = jsonDecode(datosUsuarioJson);
+      setState(() {
+        usuarioNombre = datosUsuario['usuario_nombre'];
+        usuarioCargo = datosUsuario['usuario_cargo'];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +52,9 @@ class _SideMenuState extends State<SideMenu> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const InfoCard(
-                nombre: "Jorge Mantilla",
-                cargo: "Developer",
+              InfoCard(
+                nombre: usuarioNombre,
+                cargo: usuarioCargo,
               ),
               Padding(
                 padding: const EdgeInsets.only(left: 24, top: 32, bottom: 16),
@@ -45,7 +66,6 @@ class _SideMenuState extends State<SideMenu> {
                       .copyWith(color: Colors.white70),
                 ),
               ),
-              // here is the icon rive asset because it's animated asset
               ...sideMenus.map(
                     (menu) => SideMenuTile(
                   menu: menu,
@@ -103,7 +123,7 @@ class _SideMenuState extends State<SideMenu> {
             ],
           ),
         ),
-      ), // Container
-    ); // SafeArea
+      ),
+    );
   }
 }

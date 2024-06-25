@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
 
 import '../generador_qr.dart';
+import '../screens/qr/qrScanner.dart';
 import '../src/login.dart';
 
 class RiveAsset {
@@ -50,7 +51,7 @@ List<RiveAsset> sideMenus = [
     artboard: "LIKE/STAR",
     stateMachineName: "STAR_Interactivity",
     title: "Favoritos",
-    view: null, // Reemplaza con la vista correspondiente si es necesario
+    view: QRScanner(appBarTitle: "Scanner", appBarIcon: Icons.barcode_reader), // Reemplaza con la vista correspondiente si es necesario
   ),
   RiveAsset(
     "assets/RiveAssets/icons.riv",
