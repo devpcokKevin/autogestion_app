@@ -9,7 +9,9 @@ import 'info_card.dart';
 
 // Welcome to the Episode 5
 class SideMenu extends StatefulWidget {
-  const SideMenu({super.key});
+  final Function(Widget) onMenuItemClicked;
+
+  const SideMenu({required this.onMenuItemClicked, super.key});
 
   @override
   State<SideMenu> createState() => _SideMenuState();
@@ -54,14 +56,8 @@ class _SideMenuState extends State<SideMenu> {
                     menu.input = controller.findSMI("active") as SMIBool;
                   },
                   press: () {
-                    if (menu.view != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => menu.view!),
-                      );
-                    } else {
-                      // Handle case where menu.view is null
-                    }
+                    menu.input!.change(true);
+                    widget.onMenuItemClicked(menu.view!); // Notifica al EntryPoint de la vista seleccionada
                     Future.delayed(const Duration(seconds: 1), () {
                       menu.input!.change(false);
                     });
@@ -93,6 +89,7 @@ class _SideMenuState extends State<SideMenu> {
                   },
                   press: () {
                     menu.input!.change(true);
+                    widget.onMenuItemClicked(menu.view!); // Notifica al EntryPoint de la vista seleccionada
                     Future.delayed(const Duration(seconds: 1), () {
                       menu.input!.change(false);
                     });

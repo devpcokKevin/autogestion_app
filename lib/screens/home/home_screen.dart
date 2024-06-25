@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../models/course.dart';
-import 'components/course_card.dart';
-import 'components/secondary_course_card.dart';
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -20,7 +16,7 @@ class HomePage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text(
-                  "Courses",
+                  "Bienvenido",
                   style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                       color: Colors.black, fontWeight: FontWeight.bold),
                 ),

@@ -1,9 +1,4 @@
-import 'package:autogestion/generador_qr.dart';
-import 'package:autogestion/screens/home/home_screen.dart';
-import 'package:autogestion/screens/onboding/onboding_screen.dart';
-import 'package:autogestion/screens/qr/scanner.dart';
-import 'package:autogestion/screens/qr/result_scanner.dart';
-import 'package:autogestion/src/app.dart';
+import 'package:autogestion/src/login.dart';
 import 'package:flutter/material.dart';
 
 import 'components/side_menu.dart';

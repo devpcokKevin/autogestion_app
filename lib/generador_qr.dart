@@ -1,9 +1,12 @@
+import 'package:autogestion/shared/appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:autogestion/utils/constants.dart';
 
 class QrScreen extends StatefulWidget {
-  const QrScreen({Key? key}) : super(key: key);
+  final String appBarTitle;
+  final IconData appBarIcon;
+
+  const QrScreen({Key? key, required this.appBarTitle, required this.appBarIcon}) : super(key: key);
 
   @override
   State<QrScreen> createState() => _QrScreenState();
@@ -23,33 +26,18 @@ class _QrScreenState extends State<QrScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Color(0xFF023E73),
-        title: Row(
-          children: [// Icono qr_code_scanner junto al título
-            Text(
-              "MI QR",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-            SizedBox(width: 8),
-            Icon(
-              Icons.qr_code_scanner,
-              size: 28,
-              color: Colors.white,
-            ),
-          ],
-        ),
+      appBar: CustomAppBar(
+        title: widget.appBarTitle,
+        icon: widget.appBarIcon,
+        implyLeading: false,
+        marginLeft: 50.0, // Ajusta el margen según sea necesario
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             SizedBox(height: 50),
             Text(
-              "$user_empresa",
+              user_empresa,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,

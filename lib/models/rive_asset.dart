@@ -1,20 +1,22 @@
-import 'package:autogestion/src/app.dart';
+import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:flutter/widgets.dart';
+
 import '../generador_qr.dart';
+import '../src/login.dart';
 
 class RiveAsset {
   final String artboard, stateMachineName, title, src;
   final Widget? view;
   late SMIBool? input;
 
-  RiveAsset(this.src,
-      {required this.artboard,
-      required this.stateMachineName,
-      required this.title,
-      this.view,
-      this.input});
+  RiveAsset(
+      this.src, {
+        required this.artboard,
+        required this.stateMachineName,
+        required this.title,
+        this.view,
+        this.input,
+      });
 
   set setInput(SMIBool status) {
     input = status;
@@ -34,25 +36,28 @@ List<RiveAsset> sideMenus = [
     artboard: "DASHBOARD",
     stateMachineName: "State Machine 1",
     title: "Mi QR",
-    view: QrScreen(),
+    view: QrScreen(appBarTitle: "MI QR", appBarIcon: Icons.qr_code_scanner),
   ),
   RiveAsset(
     "assets/RiveAssets/icons.riv",
     artboard: "SEARCH",
     stateMachineName: "SEARCH_Interactivity",
     title: "Buscar",
+    view: null, // Reemplaza con la vista correspondiente si es necesario
   ),
   RiveAsset(
     "assets/RiveAssets/icons.riv",
     artboard: "LIKE/STAR",
     stateMachineName: "STAR_Interactivity",
     title: "Favoritos",
+    view: null, // Reemplaza con la vista correspondiente si es necesario
   ),
   RiveAsset(
     "assets/RiveAssets/icons.riv",
     artboard: "CHAT",
     stateMachineName: "CHAT_Interactivity",
     title: "Ayuda",
+    view: null, // Reemplaza con la vista correspondiente si es necesario
   ),
 ];
 
@@ -62,11 +67,13 @@ List<RiveAsset> sideMenu2 = [
     artboard: "TIMER",
     stateMachineName: "TIMER_Interactivity",
     title: "History",
+    view: null, // Reemplaza con la vista correspondiente si es necesario
   ),
   RiveAsset(
     "assets/RiveAssets/icons.riv",
     artboard: "BELL",
     stateMachineName: "BELL_Interactivity",
     title: "Notificaciones",
+    view: null, // Reemplaza con la vista correspondiente si es necesario
   ),
 ];
