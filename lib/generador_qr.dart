@@ -1,6 +1,8 @@
-import 'package:autogestion/shared/appbar.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:autogestion/shared/appbar.dart';
 
 class QrScreen extends StatefulWidget {
   final String appBarTitle;
@@ -18,9 +20,36 @@ class _QrScreenState extends State<QrScreen> {
 
   // Variables para la información de la empresa y nombre con DNI
   String user_empresa = "INFORMATICA CONTABLE S.A.";
-  String user_nombre = "Paolo Leon Antunez";
-  String user_tipo = "Developer";
-  String user_id = "73654";
+
+  String usuarioNombre = ""; // Variable para almacenar el nombre del usuario
+  String usuarioCargo = "";
+  String usuarioId = "";
+  String razonSocial = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? razonSocialPref = prefs.getString('razon_social');
+    if (razonSocialPref != null) {
+      setState(() {
+        razonSocial = razonSocialPref;
+      });
+    }
+    String? datosUsuarioJson = prefs.getString('datosUsuario');
+    if (datosUsuarioJson != null) {
+      Map<String, dynamic> datosUsuario = jsonDecode(datosUsuarioJson);
+      setState(() {
+        usuarioNombre = datosUsuario['usuario_nombre'];
+        usuarioCargo = datosUsuario['usuario_cargo'];
+        usuarioId = datosUsuario['usuario_id'];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +66,9 @@ class _QrScreenState extends State<QrScreen> {
           children: [
             SizedBox(height: 50),
             Text(
-              user_empresa,
+              razonSocial,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 25,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF023E73),
               ),
@@ -59,15 +88,15 @@ class _QrScreenState extends State<QrScreen> {
                     ),
                     SizedBox(height: 20),
                     Text(
-                      user_nombre,
+                      usuarioNombre, // Reemplazado por la variable de SharedPreferences
                       style: TextStyle(fontSize: 16),
                     ),
                     Text(
-                      "Tipo: $user_tipo",
+                      "Cargo: $usuarioCargo",
                       style: TextStyle(fontSize: 16),
                     ),
                     Text(
-                      "ID: $user_id",
+                      "ID: $usuarioId",
                       style: TextStyle(fontSize: 16),
                     ),
                     SizedBox(height: 20),
@@ -98,8 +127,8 @@ class _QrScreenState extends State<QrScreen> {
                         SizedBox(width: 20),
                         ElevatedButton(
                           onPressed: () {
-                            // Acción del primer botón
-                            print("Primer botón presionado");
+                            // Acción del segundo botón
+                            print("Segundo botón presionado");
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF023E73), // Color de fondo del botón

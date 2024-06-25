@@ -195,6 +195,8 @@ class LoginFormState extends State<LoginForm> {
 
                         await prefs.setString('token', rpta.data['captcha']);
 
+                        await prefs.setString('razon_social', rpta.data['razonSocial']);
+
                         // Convertir datosUsuario a JSON y guardarlo
                         String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
                         await prefs.setString('datosUsuario', datosUsuarioJson);
@@ -227,7 +229,7 @@ class LoginFormState extends State<LoginForm> {
                         );
                       } else {
                         Fluttertoast.showToast(
-                          msg: "Error: " + "akldlasjdñ",
+                          msg: "Error: " + "sintaxis",
                           toastLength: Toast.LENGTH_LONG,
                           gravity: ToastGravity.CENTER,
                           backgroundColor: Colors.red,
