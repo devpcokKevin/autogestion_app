@@ -1,6 +1,6 @@
 import 'package:autogestion/entry_point.dart';
 import 'package:flutter/material.dart';
-import 'package:autogestion/screens/home/home_screen.dart';
+import 'package:autogestion/screens/home/inicio_screen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

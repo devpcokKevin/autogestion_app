@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:autogestion/components/side_menu.dart';
-import 'package:autogestion/screens/home/home_screen.dart';
+import 'package:autogestion/screens/home/inicio_screen.dart';
 import 'package:autogestion/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'models/menu_btn.dart';
@@ -20,7 +20,9 @@ class _EntryPointState extends State<EntryPoint>
   late Animation<double> scalAnimation;
 
   bool isSideMenuClosed = true;
-  Widget currentView = HomePage(); // Inicialmente se muestra HomePage
+  Widget currentView = InicioScreen(appBarTitle: "Inicio",
+      appBarIcon: Icons
+          .home); // Inicialmente se muestra HomePage
 
   @override
   void initState() {

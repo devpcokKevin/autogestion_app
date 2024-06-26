@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-
-import '../generador_qr.dart';
-import '../screens/qr/qrScanner.dart';
+import '../screens/home/inicio_screen.dart';
+import '../screens/miPerfil/mi_perfil_screen.dart';
+import '../screens/miQr/mi_qr_screen.dart';
+import '../screens/qrScanner/scanner_screen.dart';
 import '../src/login.dart';
 
 class MenuOption {
@@ -20,12 +21,14 @@ List<MenuOption> sideMenus = [
   MenuOption(
     icon: Icons.home,
     title: "Inicio",
-    view: LoginForm(),
+    view: InicioScreen(appBarTitle: "Inicio",
+        appBarIcon: Icons
+            .home),
   ),
   MenuOption(
     icon: Icons.person,
     title: "Mi Perfil",
-    view: QRScanner(
+    view: miPerfilScreen(
         appBarTitle: "Mi Perfil",
         appBarIcon: Icons
             .person), // Reemplaza con la vista correspondiente si es necesario
@@ -38,7 +41,7 @@ List<MenuOption> sideMenus = [
   MenuOption(
     icon: Icons.barcode_reader,
     title: "Scanner",
-    view: QRScanner(
+    view: QRScannerScreen(
         appBarTitle: "Scanner",
         appBarIcon: Icons
             .barcode_reader), // Reemplaza con la vista correspondiente si es necesario
@@ -49,7 +52,7 @@ List<MenuOption> sideMenu2 = [
   MenuOption(
     icon: Icons.calendar_month,
     title: "Mi Horario",
-    view: QRScanner(
+    view: QRScannerScreen(
         appBarTitle: "Mi Horario",
         appBarIcon: Icons
             .calendar_month), // Reemplaza con la vista correspondiente si es necesario
@@ -57,7 +60,7 @@ List<MenuOption> sideMenu2 = [
   MenuOption(
     icon: Icons.notifications,
     title: "Notificaciones",
-    view: QRScanner(
+    view: QRScannerScreen(
         appBarTitle: "Scanner",
         appBarIcon: Icons
             .barcode_reader), // Reemplaza con la vista correspondiente si es necesario

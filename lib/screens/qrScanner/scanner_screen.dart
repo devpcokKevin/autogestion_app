@@ -3,23 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:autogestion/utils/constants.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:autogestion/screens/qr/qroverlay.dart';
+import 'package:autogestion/screens/qrScanner/qroverlay.dart';
 
 import '../../shared/appbar.dart';
 
 const bgColor = Color(0xffafafa);
 
-class QRScanner extends StatefulWidget {
+class QRScannerScreen extends StatefulWidget {
   final String appBarTitle;
   final IconData appBarIcon;
 
-  const QRScanner({Key? key, required this.appBarTitle, required this.appBarIcon}) : super(key: key);
+  const QRScannerScreen({Key? key, required this.appBarTitle, required this.appBarIcon}) : super(key: key);
 
   @override
-  State<QRScanner> createState() => _QRScannerState();
+  State<QRScannerScreen> createState() => _QRScannerState();
 }
 
-class _QRScannerState extends State<QRScanner> {
+class _QRScannerState extends State<QRScannerScreen> {
   bool isScanCompleted = false;
   bool isScanningEnabled = true; // Controla si el escáner puede escanear nuevos códigos
   MobileScannerController controller = MobileScannerController();
@@ -124,19 +124,6 @@ class _QRScannerState extends State<QRScanner> {
                   ),
                   const QRScannerOverlay(overlayColour: backgroundColorLight),
                 ],
-              ),
-            ),
-            Expanded(
-              child: Container(
-                alignment: Alignment.center,
-                child: Text(
-                  "Desarrollado por Netcode",
-                  style: TextStyle(
-                    color:Colors.black87,
-                    fontSize:16,
-                    letterSpacing: 1,
-                  ),
-                ),
               ),
             ),
           ],

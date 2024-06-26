@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:autogestion/screens/qr/qrScanner.dart';
+import 'package:autogestion/screens/qrScanner/scanner_screen.dart';
 import 'package:autogestion/utils/constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

@@ -4,7 +4,7 @@ import 'package:autogestion/components/side_menu_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/rive_asset.dart';
+import '../models/sidebar_options.dart';
 import 'info_card.dart';
 
 class SideMenu extends StatefulWidget {
