@@ -209,6 +209,12 @@ class LoginFormState extends State<LoginForm> {
                             MaterialPageRoute(
                                 builder: (context) => EntryPoint()));
                       }, onError: (error) {
+
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => EntryPoint()));
+
                         Fluttertoast.showToast(
                           msg: "Error: " + (error as DioError).message,
                           toastLength: Toast.LENGTH_LONG,
@@ -219,6 +225,12 @@ class LoginFormState extends State<LoginForm> {
                         );
                       });
                     } catch (error) {
+
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => EntryPoint()));
+
                       if (error is DioError) {
                         Fluttertoast.showToast(
                           msg: "No se pudo conectar al servidor",

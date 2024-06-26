@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:autogestion/utils/constants.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:dio/dio.dart'; // Importamos la librería Dio
 import 'package:autogestion/screens/qrScanner/qroverlay.dart';
 import '../../shared/appbar.dart';
 
@@ -40,42 +41,55 @@ class _QRScannerState extends State<QRScannerScreen> {
   void showScanSuccessDialog(String code) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.network(
-              'https://via.placeholder.com/150', // URL de ejemplo para la imagen del QR
-              width: 100,
-              height: 100,
-            ),
-            SizedBox(height: 16),
-            Text(
-              code, // Aquí mostramos el código escaneado
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 50,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              setState(() {
-                isScanningEnabled = true;
-              });
-            },
-            child: Text('Aceptar'),
+      barrierDismissible: true, // Permite cerrar el modal haciendo clic fuera de él
+      builder: (context) {
+        // Iniciar un temporizador para cerrar el diálogo después de 4 segundos
+        Timer(Duration(seconds: 4), () {
+          if (Navigator.canPop(context)) {
+            Navigator.of(context).pop();
+          }
+        });
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 16),
+              Text(
+                code, // Aquí mostramos el código escaneado
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 50,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Future<void> sendQrDataToServer(String qrCode) async {
+    try {
+      Dio dio = Dio();
+      final response = await dio.post(
+        'https://localhost:7259/api/Qr/QrFoto',
+        data: {
+          "trabajador_id": 20019,
+          "empresa_codigo": "20354561124",
+        },
+        options: Options(
+          headers: {"Content-Type": "application/json"},
+        ),
+      );
+      print(response.data[1]['rpta']);
+    } catch (e) {
+      print("Error al enviar los datos del QR: $e");
+    }
   }
 
   @override
@@ -134,6 +148,7 @@ class _QRScannerState extends State<QRScannerScreen> {
                           });
 
                           showScanSuccessDialog(code);
+                          sendQrDataToServer(code); // Llamamos a la función para enviar los datos al servidor
                           startScanSuccessTimer();
                         }
                       },
