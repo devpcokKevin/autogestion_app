@@ -8,11 +8,10 @@ class QRScannerOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // // Changing the size of scanner cutout dependent on the device size.
-    double scanArea = (MediaQuery.of(context).size.width < 200 ||
-        MediaQuery.of(context).size.height < 200)
-        ? 200.0
-        : 330.0;
+    // Defining the size of the scanner cutout
+    double scanWidth = ((MediaQuery.of(context).size.width < 200) ? 200.0 : 300.0) + 50;
+    double scanHeight = ((MediaQuery.of(context).size.height < 300) ? 300.0 : 400.0) + 200; // Adjust the height here
+
     return Stack(children: [
       ColorFiltered(
         colorFilter: ColorFilter.mode(
@@ -22,14 +21,13 @@ class QRScannerOverlay extends StatelessWidget {
             Container(
               decoration: const BoxDecoration(
                   color: Colors.red,
-                  backgroundBlendMode: BlendMode
-                      .dstOut), // This one will handle background + difference out
+                  backgroundBlendMode: BlendMode.dstOut), // This one will handle background + difference out
             ),
             Align(
               alignment: Alignment.center,
               child: Container(
-                height: scanArea,
-                width: scanArea,
+                height: scanHeight, // Adjust the height
+                width: scanWidth, // Adjust the width
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(20),
@@ -44,8 +42,8 @@ class QRScannerOverlay extends StatelessWidget {
         child: CustomPaint(
           foregroundPainter: BorderPainter(),
           child: SizedBox(
-            width: scanArea + 25,
-            height: scanArea + 25,
+            width: scanWidth + 25,
+            height: scanHeight + 25, // Adjust the height
           ),
         ),
       ),
@@ -139,9 +137,4 @@ class OverlayWithHolePainter extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) {
     return false;
   }
-}
-
-@override
-bool shouldRepaint(CustomPainter oldDelegate) {
-  return false;
 }

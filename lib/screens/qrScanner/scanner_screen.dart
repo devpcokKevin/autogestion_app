@@ -1,10 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:autogestion/utils/constants.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:autogestion/screens/qrScanner/qroverlay.dart';
-
 import '../../shared/appbar.dart';
 
 const bgColor = Color(0xffafafa);
@@ -39,11 +37,43 @@ class _QRScannerState extends State<QRScannerScreen> {
     });
   }
 
-  void showScanSuccessSnackBar(String code) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('QR escaneado correctamente. Código: $code'),
-        duration: Duration(seconds: 1), // Ajusta la duración según tu necesidad
+  void showScanSuccessDialog(String code) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.network(
+              'https://via.placeholder.com/150', // URL de ejemplo para la imagen del QR
+              width: 100,
+              height: 100,
+            ),
+            SizedBox(height: 16),
+            Text(
+              code, // Aquí mostramos el código escaneado
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 50,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              setState(() {
+                isScanningEnabled = true;
+              });
+            },
+            child: Text('Aceptar'),
+          ),
+        ],
       ),
     );
   }
@@ -100,26 +130,13 @@ class _QRScannerState extends State<QRScannerScreen> {
                           String code = barcode.rawValue ?? '---';
                           setState(() {
                             isScanCompleted = true;
-                            isScanningEnabled = false; // Desactivamos el escaneo mientras se muestra el check
+                            isScanningEnabled = false; // Desactivamos el escaneo mientras se muestra el modal
                           });
 
-                          showScanSuccessSnackBar(code);
+                          showScanSuccessDialog(code);
                           startScanSuccessTimer();
                         }
                       },
-                    ),
-                  ),
-                  AnimatedOpacity(
-                    duration: Duration(milliseconds: 300),
-                    opacity: isScanCompleted ? 1.0 : 0.0, // Hacemos visible el check solo cuando se completa el escaneo
-                    child: Align(
-                      alignment: Alignment.center,
-                      key: UniqueKey(), // Asegura la animación cuando cambia el widget
-                      child: Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 200,
-                      ),
                     ),
                   ),
                   const QRScannerOverlay(overlayColour: backgroundColorLight),
