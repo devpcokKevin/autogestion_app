@@ -2,11 +2,9 @@ import 'dart:convert';
 
 import 'package:autogestion/components/side_menu_tile.dart';
 import 'package:flutter/material.dart';
-import 'package:rive/rive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/rive_asset.dart';
-import '../utils/rive_utils.dart';
 import 'info_card.dart';
 
 class SideMenu extends StatefulWidget {
@@ -19,7 +17,7 @@ class SideMenu extends StatefulWidget {
 }
 
 class _SideMenuState extends State<SideMenu> {
-  RiveAsset selectedMenu = sideMenus.first;
+  MenuOption selectedMenu = sideMenus.first;
   String usuarioNombre = "";
   String usuarioCargo = "";
 
@@ -59,7 +57,7 @@ class _SideMenuState extends State<SideMenu> {
               Padding(
                 padding: const EdgeInsets.only(left: 24, top: 32, bottom: 16),
                 child: Text(
-                  "RR.HH".toUpperCase(),
+                  "General".toUpperCase(),
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium!
@@ -67,20 +65,11 @@ class _SideMenuState extends State<SideMenu> {
                 ),
               ),
               ...sideMenus.map(
-                    (menu) => SideMenuTile(
+                (menu) => SideMenuTile(
                   menu: menu,
-                  riveonInit: (artboard) {
-                    StateMachineController controller =
-                    RiveUtils.getRiveController(artboard,
-                        stateMachineName: menu.stateMachineName);
-                    menu.input = controller.findSMI("active") as SMIBool;
-                  },
                   press: () {
-                    menu.input!.change(true);
-                    widget.onMenuItemClicked(menu.view!); // Notifica al EntryPoint de la vista seleccionada
-                    Future.delayed(const Duration(seconds: 1), () {
-                      menu.input!.change(false);
-                    });
+                    widget.onMenuItemClicked(menu
+                        .view!); // Notifica al EntryPoint de la vista seleccionada
                     setState(() {
                       selectedMenu = menu;
                     });
@@ -91,7 +80,7 @@ class _SideMenuState extends State<SideMenu> {
               Padding(
                 padding: const EdgeInsets.only(left: 24, top: 32, bottom: 16),
                 child: Text(
-                  "Horario".toUpperCase(),
+                  "RR.HH".toUpperCase(),
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium!
@@ -99,26 +88,29 @@ class _SideMenuState extends State<SideMenu> {
                 ),
               ),
               ...sideMenu2.map(
-                    (menu) => SideMenuTile(
+                (menu) => SideMenuTile(
                   menu: menu,
-                  riveonInit: (artboard) {
-                    StateMachineController controller =
-                    RiveUtils.getRiveController(artboard,
-                        stateMachineName: menu.stateMachineName);
-                    menu.input = controller.findSMI("active") as SMIBool;
-                  },
                   press: () {
-                    menu.input!.change(true);
-                    widget.onMenuItemClicked(menu.view!); // Notifica al EntryPoint de la vista seleccionada
-                    Future.delayed(const Duration(seconds: 1), () {
-                      menu.input!.change(false);
-                    });
+                    widget.onMenuItemClicked(menu
+                        .view!); // Notifica al EntryPoint de la vista seleccionada
                     setState(() {
                       selectedMenu = menu;
                     });
                   },
                   isActive: selectedMenu == menu,
                 ),
+              ),
+              const Spacer(),
+              SideMenuTile(
+                menu: exitOption,
+                press: () {
+                  widget.onMenuItemClicked(exitOption
+                      .view!); // Notifica al EntryPoint de la vista seleccionada
+                  setState(() {
+                    selectedMenu = exitOption;
+                  });
+                },
+                isActive: selectedMenu == exitOption,
               ),
             ],
           ),

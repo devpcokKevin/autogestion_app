@@ -192,13 +192,14 @@ class LoginFormState extends State<LoginForm> {
                         SharedPreferences prefs =
                             await SharedPreferences.getInstance();
 
-
                         await prefs.setString('token', rpta.data['captcha']);
 
-                        await prefs.setString('razon_social', rpta.data['razonSocial']);
+                        await prefs.setString(
+                            'razon_social', rpta.data['razonSocial']);
 
                         // Convertir datosUsuario a JSON y guardarlo
-                        String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
+                        String datosUsuarioJson =
+                            jsonEncode(rpta.data['datosUsuario']);
                         await prefs.setString('datosUsuario', datosUsuarioJson);
 
                         String token = prefs.getString("token")!;

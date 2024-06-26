@@ -2,9 +2,7 @@ import 'dart:math';
 import 'package:autogestion/components/side_menu.dart';
 import 'package:autogestion/screens/home/home_screen.dart';
 import 'package:autogestion/utils/constants.dart';
-import 'package:autogestion/utils/rive_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:rive/rive.dart';
 import 'models/menu_btn.dart';
 
 class EntryPoint extends StatefulWidget {
@@ -20,8 +18,6 @@ class _EntryPointState extends State<EntryPoint>
   late AnimationController _animationController;
   late Animation<double> animation;
   late Animation<double> scalAnimation;
-
-  late SMIBool isSideBarClosed;
 
   bool isSideMenuClosed = true;
   Widget currentView = HomePage(); // Inicialmente se muestra HomePage
@@ -74,7 +70,6 @@ class _EntryPointState extends State<EntryPoint>
                 _animationController.reverse(); // Cerrar el menú después de seleccionar
                 setState(() {
                   isSideMenuClosed = true;
-                  isSideBarClosed.value = true;
                 });
               },
             ),
@@ -89,34 +84,26 @@ class _EntryPointState extends State<EntryPoint>
               child: Transform.scale(
                 scale: scalAnimation.value,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(24)),
+                  borderRadius: const BorderRadius.all(Radius.circular(24)),
                   child: currentView, // Usar currentView en lugar de HomePage
                 ),
               ),
             ),
           ),
           AnimatedPositioned(
-            duration: Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 200),
             curve: Curves.fastOutSlowIn,
             left: isSideMenuClosed ? 0 : 220,
             top: 16,
             child: MenuBtn(
-              riveOnInit: (artboard) {
-                StateMachineController controller = RiveUtils.getRiveController(
-                    artboard,
-                    stateMachineName: "State Machine");
-                isSideBarClosed = controller.findSMI("isOpen") as SMIBool;
-                isSideBarClosed.value = true;
-              },
               press: () {
-                isSideBarClosed.value = !isSideBarClosed.value;
                 if (isSideMenuClosed) {
                   _animationController.forward();
                 } else {
                   _animationController.reverse();
                 }
                 setState(() {
-                  isSideMenuClosed = isSideBarClosed.value;
+                  isSideMenuClosed = !isSideMenuClosed;
                 });
               },
             ),
