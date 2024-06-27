@@ -1,57 +1,101 @@
 import 'package:flutter/material.dart';
 
-class QRScannerOverlay extends StatelessWidget {
+class QRScannerOverlay extends StatefulWidget {
   const QRScannerOverlay({Key? key, required this.overlayColour})
       : super(key: key);
 
   final Color overlayColour;
 
   @override
-  Widget build(BuildContext context) {
-    // Defining the size of the scanner cutout
-    double scanWidth = ((MediaQuery.of(context).size.width < 200) ? 200.0 : 300.0) + 20;
-    double scanHeight = ((MediaQuery.of(context).size.height < 300) ? 300.0 : 400.0) + 130; // Adjust the height here
+  _QRScannerOverlayState createState() => _QRScannerOverlayState();
+}
 
-    return Stack(children: [
-      ColorFiltered(
-        colorFilter: ColorFilter.mode(
-            overlayColour, BlendMode.srcOut), // This one will create the magic
-        child: Stack(
-          children: [
-            Container(
-              decoration: const BoxDecoration(
+class _QRScannerOverlayState extends State<QRScannerOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 1),
+    );
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
+
+    _controller.repeat(reverse: true); // Repite la animación de arriba a abajo
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double scanWidth =
+        ((MediaQuery.of(context).size.width < 200) ? 200.0 : 300.0) + 20;
+    double scanHeight =
+        ((MediaQuery.of(context).size.height < 300) ? 300.0 : 400.0) + 130;
+
+    return Stack(
+      children: [
+        ColorFiltered(
+          colorFilter: ColorFilter.mode(
+              widget.overlayColour, BlendMode.srcOut),
+          child: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
                   color: Colors.red,
-                  backgroundBlendMode: BlendMode.dstOut), // This one will handle background + difference out
-            ),
-            Align(
-              alignment: Alignment.center,
-              child: Container(
-                height: scanHeight, // Adjust the height
-                width: scanWidth, // Adjust the width
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(20),
+                  backgroundBlendMode: BlendMode.dstOut,
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-      Align(
-        alignment: Alignment.center,
-        child: CustomPaint(
-          foregroundPainter: BorderPainter(),
-          child: SizedBox(
-            width: scanWidth + 25,
-            height: scanHeight + 25, // Adjust the height
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  height: scanHeight,
+                  width: scanWidth,
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-    ]);
+        Align(
+          alignment: Alignment.center,
+          child: CustomPaint(
+            foregroundPainter: BorderPainter(),
+            child: SizedBox(
+              width: scanWidth + 25,
+              height: scanHeight + 25,
+            ),
+          ),
+        ),
+        AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Align(
+              alignment: Alignment.topCenter,
+              child: Container(
+                width: 4, // Ancho de la barra gris
+                height: 200.0, // Altura inicial de la barra gris
+                margin: EdgeInsets.only(top: _animation.value * scanHeight),
+                color: Colors.grey, // Color de la barra gris
+              ),
+            );
+          },
+        ),
+      ],
+    );
   }
 }
 
-// Creates the white borders
 class BorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -104,33 +148,6 @@ class BorderPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = width,
     );
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
-  }
-}
-
-class BarReaderSize {
-  static double width = 200;
-  static double height = 200;
-}
-
-class OverlayWithHolePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.black54;
-    canvas.drawPath(
-        Path.combine(
-          PathOperation.difference,
-          Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
-          Path()
-            ..addOval(Rect.fromCircle(
-                center: Offset(size.width - 44, size.height - 44), radius: 40))
-            ..close(),
-        ),
-        paint);
   }
 
   @override

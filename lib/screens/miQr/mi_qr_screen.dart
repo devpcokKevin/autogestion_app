@@ -162,7 +162,7 @@ class _QrScreenState extends State<QrScreen> {
                 ),
                 onChanged: (value) {
                   setState(() {
-                    qrData = value;
+                    qrData = "DIEGO QUEZADA";
                   });
                 },
               ),
