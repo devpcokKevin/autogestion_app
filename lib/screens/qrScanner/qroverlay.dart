@@ -81,12 +81,12 @@ class _QRScannerOverlayState extends State<QRScannerOverlay>
           animation: _animation,
           builder: (context, child) {
             return Align(
-              alignment: Alignment.topCenter,
+              alignment: Alignment.center,
               child: Container(
-                width: 4, // Ancho de la barra gris
-                height: 200.0, // Altura inicial de la barra gris
-                margin: EdgeInsets.only(top: _animation.value * scanHeight),
-                color: Colors.grey, // Color de la barra gris
+                height: 4, // Altura de la barra roja
+                width: scanWidth, // Ancho de la barra roja
+                margin: EdgeInsets.only(top: _animation.value * (scanHeight - 10)), // Ajuste para que la barra comience más arriba
+                color: Colors.red, // Color de la barra roja
               ),
             );
           },
