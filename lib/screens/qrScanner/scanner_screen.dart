@@ -49,6 +49,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) {
+        // Timer to automatically dismiss the AlertDialog after 4 seconds
         Timer(Duration(seconds: 4), () {
           if (Navigator.canPop(context)) {
             Navigator.of(context).pop();
@@ -80,10 +81,47 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               ),
             ],
           ),
-
         );
       },
     );
+
+    // Show custom toast below the AlertDialog
+    Future.delayed(Duration(milliseconds: 100), () {
+      showCustomToast('Datos obtenidos correctamente');
+    });
+  }
+
+  void showCustomToast(String message) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).size.height * 0.70, // Adjust the top position as needed
+        left: MediaQuery.of(context).size.width * 0.1,
+        right: MediaQuery.of(context).size.width * 0.1,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Text(
+              message,
+              style: TextStyle(color: Colors.white, fontSize: 16.0),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay?.insert(overlayEntry);
+
+    // Remove the toast after 2 seconds
+    Future.delayed(Duration(seconds: 2), () {
+      overlayEntry.remove();
+    });
   }
 
   Uint8List hexToBytes(String hex) {
@@ -125,14 +163,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
         showScanSuccessDialog(nombreCompleto, fotoBytes);
 
-        Fluttertoast.showToast(
-          msg: 'Datos obtenidos correctamente',
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
-          backgroundColor: Colors.green,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
+
 
       } else {
         print('Error: ${response.statusCode}');
