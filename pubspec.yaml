@@ -39,8 +39,11 @@ dependencies:
   jwt_decoder: ^2.0.1
   fluttertoast: ^8.0.7
   permission_handler: ^10.2.0
-
-
+  get: ^4.6.1
+  image_picker: ^0.8.4+4
+  syncfusion_flutter_calendar: ^26.1.39
+  overlay_support: ^1.2.1
+  line_awesome_flutter: ^2.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
