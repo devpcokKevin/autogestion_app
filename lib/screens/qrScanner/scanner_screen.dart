@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:autogestion/utils/constants.dart';
+import 'package:dio/dio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:dio/dio.dart'; // Importamos la librería Dio
 import 'package:autogestion/screens/qrScanner/qroverlay.dart';
 import '../../shared/appbar.dart';
-
-const bgColor = Color(0xffafafa);
+import 'package:autogestion/utils/constants.dart';
 
 class QRScannerScreen extends StatefulWidget {
   final String appBarTitle;
@@ -15,25 +13,25 @@ class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({Key? key, required this.appBarTitle, required this.appBarIcon}) : super(key: key);
 
   @override
-  State<QRScannerScreen> createState() => _QRScannerState();
+  State<QRScannerScreen> createState() => _QRScannerScreenState();
 }
 
-class _QRScannerState extends State<QRScannerScreen> {
+class _QRScannerScreenState extends State<QRScannerScreen> {
   bool isScanCompleted = false;
-  bool isScanningEnabled = true; // Controla si el escáner puede escanear nuevos códigos
-  MobileScannerController controller = MobileScannerController();
+  bool isScanningEnabled = true;
   Timer? scanSuccessTimer;
 
   void closeScreen() {
-    isScanCompleted = false;
+    setState(() {
+      isScanCompleted = false;
+    });
   }
 
   void startScanSuccessTimer() {
-    // Inicia un temporizador para restablecer isScanCompleted después de 2 segundos
     scanSuccessTimer = Timer(Duration(seconds: 1), () {
       setState(() {
         isScanCompleted = false;
-        isScanningEnabled = true; // Habilita el escaneo nuevamente
+        isScanningEnabled = true;
       });
     });
   }
@@ -41,9 +39,8 @@ class _QRScannerState extends State<QRScannerScreen> {
   void showScanSuccessDialog(String code) {
     showDialog(
       context: context,
-      barrierDismissible: true, // Permite cerrar el modal haciendo clic fuera de él
+      barrierDismissible: true,
       builder: (context) {
-        // Iniciar un temporizador para cerrar el diálogo después de 4 segundos
         Timer(Duration(seconds: 4), () {
           if (Navigator.canPop(context)) {
             Navigator.of(context).pop();
@@ -57,7 +54,7 @@ class _QRScannerState extends State<QRScannerScreen> {
             children: [
               SizedBox(height: 16),
               Text(
-                code, // Aquí mostramos el código escaneado
+                code,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 16),
@@ -94,7 +91,7 @@ class _QRScannerState extends State<QRScannerScreen> {
 
   @override
   void dispose() {
-    scanSuccessTimer?.cancel(); // Cancela el temporizador al desechar el widget
+    scanSuccessTimer?.cancel();
     super.dispose();
   }
 
@@ -107,12 +104,13 @@ class _QRScannerState extends State<QRScannerScreen> {
         title: widget.appBarTitle,
         icon: widget.appBarIcon,
         implyLeading: false,
-        marginLeft: 50.0, // Ajusta el margen según sea necesario
+        marginLeft: 50.0,
       ),
       body: Container(
         width: double.infinity,
         padding: EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
@@ -136,7 +134,7 @@ class _QRScannerState extends State<QRScannerScreen> {
               child: Stack(
                 children: [
                   Opacity(
-                    opacity: isScanCompleted ? 0.2 : 1.0, // Reducimos la opacidad cuando se muestra el check
+                    opacity: isScanCompleted ? 0.2 : 1.0,
                     child: MobileScanner(
                       allowDuplicates: true,
                       onDetect: (barcode, args) {
@@ -144,17 +142,19 @@ class _QRScannerState extends State<QRScannerScreen> {
                           String code = barcode.rawValue ?? '---';
                           setState(() {
                             isScanCompleted = true;
-                            isScanningEnabled = false; // Desactivamos el escaneo mientras se muestra el modal
+                            isScanningEnabled = false;
                           });
 
                           showScanSuccessDialog(code);
-                          sendQrDataToServer(code); // Llamamos a la función para enviar los datos al servidor
+                          sendQrDataToServer(code);
                           startScanSuccessTimer();
                         }
                       },
                     ),
                   ),
-                  const QRScannerOverlay(overlayColour: backgroundColorLight),
+                  Positioned.fill(
+                    child: QRScannerOverlay(overlayColour: backgroundColorLight),
+                  ),
                 ],
               ),
             ),

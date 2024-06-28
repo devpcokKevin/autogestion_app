@@ -20,11 +20,18 @@ class _QRScannerOverlayState extends State<QRScannerOverlay>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 1),
+      duration: Duration(seconds: 2), // Ajusta la duración según sea necesario
     );
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
 
-    _controller.repeat(reverse: true); // Repite la animación de arriba a abajo
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _controller.reset(); // Reinicia la animación cuando se complete
+        _controller.forward(); // Comienza la animación nuevamente
+      }
+    });
+
+    _controller.forward(); // Inicia la animación
   }
 
   @override
@@ -35,63 +42,64 @@ class _QRScannerOverlayState extends State<QRScannerOverlay>
 
   @override
   Widget build(BuildContext context) {
-    double scanWidth =
-        ((MediaQuery.of(context).size.width < 200) ? 200.0 : 300.0) + 20;
-    double scanHeight =
-        ((MediaQuery.of(context).size.height < 300) ? 300.0 : 400.0) + 130;
+    double overlayWidth = MediaQuery.of(context).size.width - 32;
+    double overlayHeight = MediaQuery.of(context).size.height - 160;
 
-    return Stack(
-      children: [
-        ColorFiltered(
-          colorFilter: ColorFilter.mode(
-              widget.overlayColour, BlendMode.srcOut),
-          child: Stack(
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  backgroundBlendMode: BlendMode.dstOut,
-                ),
-              ),
-              Align(
-                alignment: Alignment.center,
-                child: Container(
-                  height: scanHeight,
-                  width: scanWidth,
-                  decoration: BoxDecoration(
+    return Container(
+      width: overlayWidth,
+      height: overlayHeight,
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      child: Stack(
+        children: [
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(widget.overlayColour, BlendMode.srcOut),
+            child: Stack(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
                     color: Colors.red,
-                    borderRadius: BorderRadius.circular(20),
+                    backgroundBlendMode: BlendMode.dstOut,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        Align(
-          alignment: Alignment.center,
-          child: CustomPaint(
-            foregroundPainter: BorderPainter(),
-            child: SizedBox(
-              width: scanWidth + 25,
-              height: scanHeight + 25,
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    height: overlayHeight,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Align(
-              alignment: Alignment.center,
-              child: Container(
-                height: 4, // Altura de la barra roja
-                width: scanWidth, // Ancho de la barra roja
-                margin: EdgeInsets.only(top: _animation.value * (scanHeight - 10)), // Ajuste para que la barra comience más arriba
-                color: Colors.red, // Color de la barra roja
+          Align(
+            alignment: Alignment.center,
+            child: CustomPaint(
+              foregroundPainter: BorderPainter(),
+              child: SizedBox(
+                width: overlayWidth,
+                height: overlayHeight,
               ),
-            );
-          },
-        ),
-      ],
+            ),
+          ),
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              return Positioned(
+                top: _animation.value * (overlayHeight - 4),
+                left: 0,
+                child: Container(
+                  height: 4, // Altura de la barra roja
+                  width: overlayWidth, // Ancho de la barra roja
+                  color: Colors.red, // Color de la barra roja
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
