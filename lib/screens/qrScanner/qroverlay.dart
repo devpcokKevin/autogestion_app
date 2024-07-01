@@ -43,7 +43,7 @@ class _QRScannerOverlayState extends State<QRScannerOverlay>
   @override
   Widget build(BuildContext context) {
     double overlayWidth = MediaQuery.of(context).size.width - 32;
-    double overlayHeight = MediaQuery.of(context).size.height - 160;
+    double overlayHeight = MediaQuery.of(context).size.height - 0.1;
 
     return Container(
       width: overlayWidth,
@@ -51,27 +51,30 @@ class _QRScannerOverlayState extends State<QRScannerOverlay>
       padding: EdgeInsets.symmetric(horizontal: 16),
       child: Stack(
         children: [
-          ColorFiltered(
-            colorFilter: ColorFilter.mode(widget.overlayColour, BlendMode.srcOut),
-            child: Stack(
-              children: [
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    backgroundBlendMode: BlendMode.dstOut,
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    height: overlayHeight,
-                    decoration: BoxDecoration(
+          ClipPath(
+            clipper: OverlayClipper(),
+            child: ColorFiltered(
+              colorFilter: ColorFilter.mode(widget.overlayColour, BlendMode.srcOut),
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
                       color: Colors.red,
-                      borderRadius: BorderRadius.circular(20),
+                      backgroundBlendMode: BlendMode.dstOut,
                     ),
                   ),
-                ),
-              ],
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      height: overlayHeight,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Align(
@@ -160,6 +163,34 @@ class BorderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+class OverlayClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    const radius = 20.0;
+    double overlayWidth = size.width;
+    double overlayHeight = size.height;
+    double x = (size.width - overlayWidth) / 2;
+    double y = (size.height - overlayHeight) / 2;
+
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndCorners(
+          Rect.fromLTWH(x, y, overlayWidth, overlayHeight),
+          topLeft: Radius.circular(radius),
+          topRight: Radius.circular(radius),
+          bottomLeft: Radius.circular(radius),
+          bottomRight: Radius.circular(radius),
+        ),
+      );
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
     return false;
   }
 }

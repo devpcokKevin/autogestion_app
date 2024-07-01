@@ -1,23 +1,29 @@
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
-import 'package:autogestion/utils/constants.dart';
-import 'package:get/get.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:dio/dio.dart';
-import 'package:autogestion/screens/qrScanner/qroverlay.dart';
-import '../../shared/appbar.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
+import 'package:dio/dio.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../../shared/appbar.dart';
+import 'qroverlay.dart';
+import 'package:autogestion/utils/constants.dart';
 
 const bgColor = Color(0xffafafa);
+
 class QRScannerScreen extends StatefulWidget {
   final String appBarTitle;
   final IconData appBarIcon;
 
-  const QRScannerScreen({Key? key, required this.appBarTitle, required this.appBarIcon}) : super(key: key);
+  const QRScannerScreen({
+    Key? key,
+    required this.appBarTitle,
+    required this.appBarIcon,
+  }) : super(key: key);
 
   @override
   State<QRScannerScreen> createState() => _QRScannerScreenState();
@@ -28,6 +34,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   bool isScanningEnabled = true;
   MobileScannerController controller = MobileScannerController();
   Timer? scanSuccessTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    requestCameraPermission();
+  }
 
   void closeScreen() {
     setState(() {
@@ -49,7 +61,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) {
-        // Timer to automatically dismiss the AlertDialog after 4 seconds
         Timer(Duration(seconds: 4), () {
           if (Navigator.canPop(context)) {
             Navigator.of(context).pop();
@@ -163,7 +174,14 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
         showScanSuccessDialog(nombreCompleto, fotoBytes);
 
-
+        Fluttertoast.showToast(
+          msg: 'Datos obtenidos correctamente',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
 
       } else {
         print('Error: ${response.statusCode}');
@@ -173,9 +191,31 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     }
   }
 
+  Future<void> requestCameraPermission() async {
+    var status = await Permission.camera.status;
+    if (!status.isGranted) {
+      status = await Permission.camera.request();
+      if (status.isGranted) {
+        controller.start();
+      } else {
+        Fluttertoast.showToast(
+          msg: 'Permiso de cámara denegado',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+      }
+    } else {
+      controller.start();
+    }
+  }
+
   @override
   void dispose() {
     scanSuccessTimer?.cancel();
+    controller.dispose();
     super.dispose();
   }
 
@@ -219,20 +259,34 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 children: [
                   Opacity(
                     opacity: isScanCompleted ? 0.2 : 1.0,
-                    child: MobileScanner(
-                      allowDuplicates: true,
-                      onDetect: (barcode, args) {
-                        if (!isScanCompleted && isScanningEnabled) {
-                          String code = barcode.rawValue ?? '---';
-                          setState(() {
-                            isScanCompleted = true;
-                            isScanningEnabled = false;
-                          });
+                    child: ClipPath(
+                      clipper: OverlayClipper(),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.84, // Ajuste el ancho del escáner aquí
+                          height: double.infinity,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20), // Añade los bordes circulares aquí
+                            child: MobileScanner(
+                              allowDuplicates: true,
+                              controller: controller,
+                              onDetect: (barcode, args) {
+                                if (!isScanCompleted && isScanningEnabled) {
+                                  String code = barcode.rawValue ?? '---';
+                                  setState(() {
+                                    isScanCompleted = true;
+                                    isScanningEnabled = false;
+                                  });
 
-                          sendQrDataToServer(code);
-                          startScanSuccessTimer();
-                        }
-                      },
+                                  sendQrDataToServer(code);
+                                  startScanSuccessTimer();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   const QRScannerOverlay(overlayColour: backgroundColorLight),
