@@ -7,8 +7,6 @@ class Login {
   String empresaPassword;
   String usuarioCodigo;
   String usuarioPassword;
-  String tipoCambio;
-  String fechaProceso;
 
   // Constructor de la clase para inicializar los atributos
   Login({
@@ -16,8 +14,6 @@ class Login {
     required this.empresaPassword,
     required this.usuarioCodigo,
     required this.usuarioPassword,
-    required this.tipoCambio,
-    required this.fechaProceso,
   });
 
   Map<String, dynamic> toJson() {
@@ -26,9 +22,6 @@ class Login {
       'empresa_password': empresaPassword,
       'usuario_codigo': usuarioCodigo,
       'usuario_password': usuarioPassword,
-      'tipo_cambio': tipoCambio,
-      'fecha_proceso': fechaProceso,
     };
   }
-
 }

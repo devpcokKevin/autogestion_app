@@ -1,20 +1,16 @@
 import 'package:autogestion/entry_point.dart';
 import 'package:flutter/material.dart';
-import 'package:autogestion/screens/home/inicio_screen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:dio/adapter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
 
 import '../models/Login.dart';
-import 'package:autogestion/models/Login.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:autogestion/components/side_menu.dart';
-import 'package:dio/adapter.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert'; // Para usar jsonEncode
-import 'dart:io';
-
-import 'package:dio/dio.dart';
 
 class LoginForm extends StatefulWidget {
   LoginForm({Key? key}) : super(key: key);
@@ -28,6 +24,8 @@ class LoginFormState extends State<LoginForm> {
   String _contrasenaEmpresa = "";
   String _codigoUsuario = "";
   String _contrasenaUsuario = "";
+  String _deviceIdentifier = '';
+  // final String _phoneIdentifier = 'TE1A.220922.010'; // Reemplaza con tu identificador
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +33,25 @@ class LoginFormState extends State<LoginForm> {
     TextEditingController controlerContraEmpresa = TextEditingController();
     TextEditingController controlerCodUsuario = TextEditingController();
     TextEditingController controlerContraUsuario = TextEditingController();
+
+    Future<void> _getDeviceIdentifier() async {
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      String? identifier;
+
+      if (Platform.isAndroid) {
+        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+        identifier = androidInfo.id; // Identificador único de Android
+      } else if (Platform.isIOS) {
+        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+        identifier = iosInfo.identifierForVendor; // Identificador único de iOS
+      }
+
+      if (identifier != null) {
+        setState(() {
+          _deviceIdentifier = identifier!;
+        });
+      }
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -46,12 +63,12 @@ class LoginFormState extends State<LoginForm> {
             children: [
               SizedBox(height: 30.0),
               Container(
-                width: 100.0, // Ancho deseado para la imagen
-                height: 100.0, // Alto deseado para la imagen
+                width: 100.0,
+                height: 100.0,
                 decoration: BoxDecoration(
                   shape: BoxShape.rectangle,
                   image: DecorationImage(
-                    fit: BoxFit.cover, // Ajusta la imagen dentro del contenedor
+                    fit: BoxFit.cover,
                     image: AssetImage('images/logo.png'),
                   ),
                 ),
@@ -144,7 +161,7 @@ class LoginFormState extends State<LoginForm> {
                 child: TextButton(
                   style: TextButton.styleFrom(
                     backgroundColor: Color(0xFF023E73),
-                    foregroundColor: Colors.white70, // Color del texto
+                    foregroundColor: Colors.white70,
                   ),
                   child: Text(
                     'INGRESAR',
@@ -159,103 +176,101 @@ class LoginFormState extends State<LoginForm> {
                       empresa_codigo: "20354561124",
                       empresa_password: "123456jv",
                       usuario_codigo: "73370279",
-                      usuario_password: "usuarioBDD",
-                      tipo_de_cambio: "3.70",
-                      fecha_de_proceso: "21/06/2024",
+                      usuario_password: "usuarioBDD"
                     );
 
-                    var url =
-                        'https://10.0.2.2:7259/api/UsuarioL/iniciarSesion';
-                    BaseOptions options = BaseOptions(
-                      connectTimeout: 1000,
-                      // Timeout para la conexión en milisegundos
-                      receiveTimeout: 1000,
-                    );
-                    Dio dio = Dio(options);
-                    // Configurar HttpClientAdapter para aceptar todos los certificados (INSEGURO)
-                    (dio.httpClientAdapter as DefaultHttpClientAdapter)
-                        .onHttpClientCreate = (client) {
-                      client.badCertificateCallback =
-                          (X509Certificate cert, String host, int port) => true;
-                      return client;
-                    };
+                      var url = 'https://10.0.2.2:7259/api/UsuarioL/iniciarSesion';
+                      BaseOptions options = BaseOptions(
+                        connectTimeout: 1000,
+                        receiveTimeout: 1000,
+                      );
+                      Dio dio = Dio(options);
+                      (dio.httpClientAdapter as DefaultHttpClientAdapter)
+                          .onHttpClientCreate = (client) {
+                        client.badCertificateCallback =
+                            (X509Certificate cert, String host, int port) => true;
+                        return client;
+                      };
 
-                    try {
-                      var response = await dio
-                          .post(
-                        data: login.toJson(),
-                        url,
-                        options: Options(
-                            headers: {"Content-Type": "application/json"}),
-                      )
-                          .then((rpta) async {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
+                      try {
+                        var response = await dio.post(
+                          data: login.toJson(),
+                          url,
+                          options: Options(headers: {"Content-Type": "application/json"}),
+                        ).then((rpta) async {
+                          await _getDeviceIdentifier();
+                          var datosUsuario = rpta.data['datosUsuario'];
+                          var user_phone_id = datosUsuario['usuario_phone_id'];
 
-                        await prefs.setString('token', rpta.data['captcha']);
+                          if (_deviceIdentifier == user_phone_id) {
+                            SharedPreferences prefs = await SharedPreferences.getInstance();
 
-                        await prefs.setString(
-                            'razon_social', rpta.data['razonSocial']);
+                            await prefs.setString('token', rpta.data['captcha']);
+                            await prefs.setString('razon_social', rpta.data['razonSocial']);
 
-                        // Convertir datosUsuario a JSON y guardarlo
-                        String datosUsuarioJson =
-                            jsonEncode(rpta.data['datosUsuario']);
-                        await prefs.setString('datosUsuario', datosUsuarioJson);
+                            String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
+                            await prefs.setString('datosUsuario', datosUsuarioJson);
 
-                        String token = prefs.getString("token")!;
-                        JwtDecoder.decode(token);
+                            String token = prefs.getString("token")!;
+                            JwtDecoder.decode(token);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => EntryPoint()));
+                          }
+                          else{
+                            Fluttertoast.showToast(
+                              msg: "Dispositivo no habilitado",
+                              toastLength: Toast.LENGTH_LONG,
+                              gravity: ToastGravity.CENTER,
+                              backgroundColor: Colors.red,
+                              textColor: Colors.white,
+                              fontSize: 16.0,
+                            );
+                          }
+                        }, onError: (error) {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => EntryPoint()));
+
+                          Fluttertoast.showToast(
+                            msg: "Error: " + (error as DioError).message,
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.CENTER,
+                            backgroundColor: Colors.red,
+                            textColor: Colors.white,
+                            fontSize: 16.0,
+                          );
+                        });
+                      } catch (error) {
                         Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => EntryPoint()));
-                      }, onError: (error) {
+                            MaterialPageRoute(builder: (context) => EntryPoint()));
 
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => EntryPoint()));
-
-                        Fluttertoast.showToast(
-                          msg: "Error: " + (error as DioError).message,
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.CENTER,
-                          backgroundColor: Colors.red,
-                          textColor: Colors.white,
-                          fontSize: 16.0,
-                        );
-                      });
-                    } catch (error) {
-
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => EntryPoint()));
-
-                      if (error is DioError) {
-                        Fluttertoast.showToast(
-                          msg: "No se pudo conectar al servidor",
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.CENTER,
-                          backgroundColor: Colors.red,
-                          textColor: Colors.white,
-                          fontSize: 16.0,
-                        );
-                      } else {
-                        Fluttertoast.showToast(
-                          msg: "Error: " + "sintaxis",
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.CENTER,
-                          backgroundColor: Colors.red,
-                          textColor: Colors.white,
-                          fontSize: 16.0,
-                        );
+                        if (error is DioError) {
+                          Fluttertoast.showToast(
+                            msg: "No se pudo conectar al servidor",
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.CENTER,
+                            backgroundColor: Colors.red,
+                            textColor: Colors.white,
+                            fontSize: 16.0,
+                          );
+                        } else {
+                          Fluttertoast.showToast(
+                            msg: "Error: " + "sintaxis",
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.CENTER,
+                            backgroundColor: Colors.red,
+                            textColor: Colors.white,
+                            fontSize: 16.0,
+                          );
+                        }
                       }
-                    }
                   },
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
