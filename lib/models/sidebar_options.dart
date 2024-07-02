@@ -1,3 +1,4 @@
+import 'package:autogestion/screens/geocerca/geocerca_screen.dart';
 import 'package:flutter/material.dart';
 import '../screens/home/inicio_screen.dart';
 import '../screens/miPerfil/mi_perfil_screen.dart';
@@ -59,11 +60,11 @@ List<MenuOption> sideMenu2 = [
   ),
   MenuOption(
     icon: Icons.notifications,
-    title: "Notificaciones",
-    view: QRScannerScreen(
-        appBarTitle: "Scanner",
+    title: "Geocerca",
+    view: GoogleMapScreen(
+        appBarTitle: "Mapa",
         appBarIcon: Icons
-            .barcode_reader), // Reemplaza con la vista correspondiente si es necesario
+            .location_on), // Reemplaza con la vista correspondiente si es necesario
   ),
 ];
 
