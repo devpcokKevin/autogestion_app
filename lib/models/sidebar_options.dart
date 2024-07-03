@@ -1,4 +1,5 @@
 import 'package:autogestion/screens/geocerca/geocerca_screen.dart';
+import 'package:autogestion/screens/miHorario/mi_horario_screen.dart';
 import 'package:flutter/material.dart';
 import '../screens/home/inicio_screen.dart';
 import '../screens/miPerfil/mi_perfil_screen.dart';
@@ -41,9 +42,9 @@ List<MenuOption> sideMenus = [
   ),
   MenuOption(
     icon: Icons.barcode_reader,
-    title: "Scanner",
+    title: "Escaner",
     view: QRScannerScreen(
-        appBarTitle: "Scanner",
+        appBarTitle: "Escaner",
         appBarIcon: Icons
             .barcode_reader), // Reemplaza con la vista correspondiente si es necesario
   ),
@@ -53,16 +54,16 @@ List<MenuOption> sideMenu2 = [
   MenuOption(
     icon: Icons.calendar_month,
     title: "Mi Horario",
-    view: QRScannerScreen(
+    view: miHorarioScreen(
         appBarTitle: "Mi Horario",
         appBarIcon: Icons
             .calendar_month), // Reemplaza con la vista correspondiente si es necesario
   ),
   MenuOption(
-    icon: Icons.pin_drop,
+    icon: Icons.notifications,
     title: "Geocerca",
     view: GoogleMapScreen(
-        appBarTitle: "Mapa",
+        appBarTitle: "Geocerca",
         appBarIcon: Icons
             .location_on), // Reemplaza con la vista correspondiente si es necesario
   ),

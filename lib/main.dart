@@ -1,7 +1,6 @@
-import 'package:autogestion/screens/geocerca/geocerca_screen.dart';
 import 'package:autogestion/src/login.dart';
 import 'package:flutter/material.dart';
-
+import 'package:get/get.dart';
 import 'components/side_menu.dart';
 
 void main() {
@@ -14,7 +13,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'The Flutter Way',
       theme: ThemeData(
         scaffoldBackgroundColor: const Color(0xFFEEF1F8),
