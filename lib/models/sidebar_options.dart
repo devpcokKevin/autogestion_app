@@ -59,7 +59,7 @@ List<MenuOption> sideMenu2 = [
             .calendar_month), // Reemplaza con la vista correspondiente si es necesario
   ),
   MenuOption(
-    icon: Icons.notifications,
+    icon: Icons.pin_drop,
     title: "Geocerca",
     view: GoogleMapScreen(
         appBarTitle: "Mapa",

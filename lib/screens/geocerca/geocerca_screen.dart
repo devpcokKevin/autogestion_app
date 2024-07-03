@@ -21,12 +21,8 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
 
   LatLng initialLocation = const LatLng(-8.100742, -79.033865);
 
-  List<LatLng> polygonPoints = const [
-    LatLng(-8.10081708996039, -79.03387105965153),
-    LatLng(-8.100645813725436, -79.03378388785895),
-    LatLng(-8.100746720663377, -79.03358138107922),
-    LatLng(-8.100911358244659, -79.03365380072229),
-  ];
+  List<LatLng> polygonPoints = [];
+  LatLng? movingPoint;
 
   bool isInDeliveryArea = true;
   bool isRadioButtonChecked = true;
@@ -44,6 +40,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
       });
     }
   }
+
 
   double _calculateDistance(LatLng point1, LatLng point2) {
     const double earthRadius = 6371000; // meters
@@ -75,6 +72,59 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
     return result;
   }
 
+  void _addPolygonPoint(LatLng point) {
+    setState(() {
+      polygonPoints.add(point);
+    });
+  }
+
+  void _showDeleteOption(LatLng point) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: Icon(Icons.delete),
+                title: Text('Eliminar punto'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _removePolygonPoint(point);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _removePolygonPoint(LatLng point) {
+    setState(() {
+      polygonPoints.remove(point);
+      movingPoint = null;
+    });
+  }
+
+  void _updateMovingPointPosition(LatLng newPosition) {
+    setState(() {
+      if (movingPoint != null) {
+        final index = polygonPoints.indexOf(movingPoint!);
+        if (index != -1) {
+          polygonPoints[index] = newPosition;
+          movingPoint = newPosition;
+        }
+      }
+    });
+  }
+
+  void _finalizeMovingPoint() {
+    setState(() {
+      movingPoint = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -103,10 +153,29 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                       draggable: true,
                       position: initialLocation,
                       icon: markerbitmap,
-                      onDragEnd: (newPosition) {
-                        _updateMarkerPosition(newPosition);
+                      onDrag: (newPosition) {
+                        _updateMarkerPosition(newPosition); // Actualizar posición continuamente
                       },
                     ),
+                    if (!isRadioButtonChecked)
+                      ...polygonPoints.map((point) => Marker(
+                        markerId: MarkerId(point.toString()),
+                        position: point,
+                        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                        draggable: true,
+                        onTap: () => _showDeleteOption(point),
+                        onDragStart: (newPosition) {
+                          setState(() {
+                            movingPoint = point;
+                          });
+                        },
+                        onDragEnd: (newPosition) {
+                          _finalizeMovingPoint();
+                        },
+                        onDrag: (newPosition) {
+                          _updateMovingPointPosition(newPosition);
+                        },
+                      )),
                   },
                   circles: isRadioButtonChecked
                       ? {
@@ -119,7 +188,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                     ),
                   }
                       : {},
-                  polygons: !isRadioButtonChecked
+                  polygons: !isRadioButtonChecked && polygonPoints.length > 2
                       ? {
                     Polygon(
                       polygonId: PolygonId("1"),
@@ -129,6 +198,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                     ),
                   }
                       : {},
+                  onTap: (point) {
+                    if (!isRadioButtonChecked) {
+                      _addPolygonPoint(point);
+                    }
+                  },
                 ),
               ),
               AddressInfo(
