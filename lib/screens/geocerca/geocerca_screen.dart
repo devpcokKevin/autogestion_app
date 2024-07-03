@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../shared/appbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'components/address_info.dart';
+import '../../shared/appbar.dart';
 
 class GoogleMapScreen extends StatefulWidget {
   final String appBarTitle;
@@ -28,6 +32,43 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
   bool isRadioButtonChecked = true;
   double deliveryRadius = 30;
 
+  bool canSavePolygon = false;
+
+  TextEditingController areaNameController = TextEditingController();
+  String areaName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPolygonPoints();
+    _loadAreaName();
+  }
+
+  void _loadPolygonPoints() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? polygonPointsJson = prefs.getString('polygonPoints');
+    if (polygonPointsJson != null) {
+      List<dynamic> pointsJson = jsonDecode(polygonPointsJson);
+      List<LatLng> loadedPoints = pointsJson.map((point) => LatLng(point[0], point[1])).toList();
+      setState(() {
+        polygonPoints = loadedPoints;
+        if (!isRadioButtonChecked && polygonPoints.length >= 3) {
+          canSavePolygon = true;
+        }
+      });
+    }
+  }
+
+  void _loadAreaName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedAreaName = prefs.getString('areaName');
+    if (savedAreaName != null) {
+      setState(() {
+        areaName = savedAreaName;
+      });
+    }
+  }
+
   void _updateMarkerPosition(LatLng position) {
     if (isRadioButtonChecked) {
       final distance = _calculateDistance(initialLocation, position);
@@ -40,7 +81,6 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
       });
     }
   }
-
 
   double _calculateDistance(LatLng point1, LatLng point2) {
     const double earthRadius = 6371000; // meters
@@ -63,8 +103,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
     for (i = 0; i < n; i++) {
       if ((polygon[i].latitude > point.latitude) != (polygon[j].latitude > point.latitude) &&
           (point.longitude < (polygon[j].longitude - polygon[i].longitude) * (point.latitude - polygon[i].latitude) /
-              (polygon[j].latitude - polygon[i].latitude) +
-              polygon[i].longitude)) {
+              (polygon[j].latitude - polygon[i].latitude) + polygon[i].longitude)) {
         result = !result;
       }
       j = i;
@@ -75,6 +114,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
   void _addPolygonPoint(LatLng point) {
     setState(() {
       polygonPoints.add(point);
+      if (!isRadioButtonChecked && polygonPoints.length >= 3) {
+        canSavePolygon = true;
+      } else {
+        canSavePolygon = false;
+      }
     });
   }
 
@@ -104,6 +148,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
     setState(() {
       polygonPoints.remove(point);
       movingPoint = null;
+      if (!isRadioButtonChecked && polygonPoints.length >= 3) {
+        canSavePolygon = true;
+      } else {
+        canSavePolygon = false;
+      }
     });
   }
 
@@ -125,6 +174,53 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
     });
   }
 
+  void _savePolygonPoints() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<dynamic> dataToSave = polygonPoints.map((point) => [point.latitude, point.longitude]).toList();
+    prefs.setString('polygonPoints', jsonEncode(dataToSave));
+  }
+
+  Future<void> _savePolygonWithAreaName() async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Guardar área"),
+          content: TextField(
+            controller: areaNameController,
+            decoration: InputDecoration(hintText: "Ingrese el nombre del área"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Cancelar"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text("Guardar"),
+              onPressed: () async {
+                if (areaNameController.text.isNotEmpty) {
+                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  List<dynamic> dataToSave = [
+                    polygonPoints.map((point) => [point.latitude, point.longitude]).toList(),
+                    areaNameController.text,
+                  ];
+                  prefs.setString('polygonData', jsonEncode(dataToSave));
+                  prefs.setString('areaName', areaNameController.text); // Guarda el nombre del área
+                  setState(() {
+                    areaName = areaNameController.text; // Actualiza el nombre del área en el estado local
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,7 +228,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
         title: widget.appBarTitle,
         icon: widget.appBarIcon,
         implyLeading: false,
-        marginLeft: 50.0, // Ajusta el margen según sea necesario
+        marginLeft: 50.0,
       ),
       body: Stack(
         children: [
@@ -188,7 +284,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                     ),
                   }
                       : {},
-                  polygons: !isRadioButtonChecked && polygonPoints.length > 2
+                  polygons: !isRadioButtonChecked && polygonPoints.length >= 3
                       ? {
                     Polygon(
                       polygonId: PolygonId("1"),
@@ -213,16 +309,39 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
           Positioned(
             top: 10,
             right: 10,
-            child: FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  isRadioButtonChecked = !isRadioButtonChecked;
-                  _updateMarkerPosition(initialLocation); // Actualizar la posición del marcador al cambiar entre áreas
-                });
-              },
-              child: Icon(isRadioButtonChecked ? Icons.radio_button_checked : Icons.add_location_alt),
-              backgroundColor: Colors.blue,
-              shape: CircleBorder(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  onPressed: () {
+                    setState(() {
+                      isRadioButtonChecked = !isRadioButtonChecked;
+                      _updateMarkerPosition(initialLocation); // Actualizar la posición del marcador al cambiar entre áreas
+                    });
+                  },
+                  child: Icon(isRadioButtonChecked ? Icons.radio_button_checked : Icons.add_location_alt),
+                  backgroundColor: Colors.blue,
+                  shape: CircleBorder(),
+                ),
+                SizedBox(height: 16),
+                if (!isRadioButtonChecked && polygonPoints.length >= 3)
+                  FloatingActionButton(
+                    onPressed: canSavePolygon ? _savePolygonPoints : null,
+                    child: Icon(Icons.save),
+                    backgroundColor: canSavePolygon ? Colors.green : Colors.grey,
+                    shape: CircleBorder(),
+                  ),
+                SizedBox(height: 16),
+                if (!isRadioButtonChecked && polygonPoints.length >= 3)
+                  FloatingActionButton(
+                    onPressed: () {
+                      _savePolygonWithAreaName(); // Mostrar modal para ingresar nombre del área y guardar
+                    },
+                    child: Icon(Icons.edit),
+                    backgroundColor: Colors.orange,
+                    shape: CircleBorder(),
+                  ),
+              ],
             ),
           ),
         ],
