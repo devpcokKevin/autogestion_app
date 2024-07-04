@@ -171,6 +171,8 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
   void _finalizeMovingPoint() {
     setState(() {
       movingPoint = null;
+      // Actualizar el estado para que se renderice el polígono nuevamente
+      polygonPoints = List.from(polygonPoints);
     });
   }
 
@@ -249,29 +251,31 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                       draggable: true,
                       position: initialLocation,
                       icon: markerbitmap,
-                      onDrag: (newPosition) {
-                        _updateMarkerPosition(newPosition); // Actualizar posición continuamente
+                      onDragEnd: (newPosition) {
+                        _updateMarkerPosition(newPosition); // Actualizar posición al finalizar el arrastre
                       },
                     ),
                     if (!isRadioButtonChecked)
-                      ...polygonPoints.map((point) => Marker(
-                        markerId: MarkerId(point.toString()),
-                        position: point,
-                        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-                        draggable: true,
-                        onTap: () => _showDeleteOption(point),
-                        onDragStart: (newPosition) {
-                          setState(() {
-                            movingPoint = point;
-                          });
-                        },
-                        onDragEnd: (newPosition) {
-                          _finalizeMovingPoint();
-                        },
-                        onDrag: (newPosition) {
-                          _updateMovingPointPosition(newPosition);
-                        },
-                      )),
+                      ...polygonPoints.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final point = entry.value;
+                        return Marker(
+                          markerId: MarkerId(point.toString()),
+                          position: point,
+                          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                          draggable: true,
+                          onTap: () => _showDeleteOption(point),
+                          onDragStart: (newPosition) {
+                            setState(() {
+                              movingPoint = point;
+                            });
+                          },
+                          onDragEnd: (newPosition) {
+                            _updateMovingPointPosition(newPosition);
+                            _finalizeMovingPoint();
+                          },
+                        );
+                      }),
                   },
                   circles: isRadioButtonChecked
                       ? {
