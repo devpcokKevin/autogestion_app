@@ -156,6 +156,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     if (esTrabajador) {
 
       var trabajador_id = (datosUsuarioMap['trabajador_id']);
+      var empresa_codigo = prefs.get("empresa_codigo");
       String tokenStringId = qrCode;
       Map<String, dynamic> tokenMapId = JwtDecoder.decode(tokenStringId);
       print('ID DE TRABAJADOR: '+trabajador_id.toString());
@@ -197,7 +198,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
             var urlFoto = '$baseUrl/api/Qr/QrFoto';
             var empresaCodigo = prefs.get("empresaCodigo");
-            var data = {"trabajador_id": trabajador_id, "empresa_codigo": "20354561124"};
+            var data = {"trabajador_id": trabajador_id, "empresa_codigo": empresa_codigo};
             print('DATA_ '+data.toString());
             dio
                 .post(

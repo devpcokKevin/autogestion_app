@@ -200,6 +200,7 @@ class LoginFormState extends State<LoginForm> {
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
                         await prefs.setString('razon_social', rpta.data['razonSocial']);
+                        await prefs.setString('empresa_codigo', rpta.data['empresa_codigo']);
                         await prefs.setString('tokenVerificador', rpta.data['idToken']);
                         // await prefs.setString('empresa_codigo', rpta.data['empresaCodigo']);
                         await prefs.setString('datosUsuario', datosUsuarioJson);
