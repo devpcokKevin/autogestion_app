@@ -148,26 +148,28 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   Future<void> sendQrDataToServer(String qrCode) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    var datosUsuarioMap = jsonDecode(prefs.getString("datosUsuario")!)  as Map<String, dynamic>;
-    bool esTrabajador = (datosUsuarioMap['usuario_esTrabajador'] == "True") ? true : false;
+    var datosUsuarioMap =
+    jsonDecode(prefs.getString("datosUsuario")!) as Map<String, dynamic>;
+    bool esTrabajador =
+    (datosUsuarioMap['usuario_esTrabajador'] == "True") ? true : false;
 
-    print('ES TRABAJADOR: '+esTrabajador.toString());
+    print('ES TRABAJADOR: ' + esTrabajador.toString());
 
     if (esTrabajador) {
-
-      var trabajador_id = (datosUsuarioMap['trabajador_id']);
-      var empresa_codigo = prefs.get("empresa_codigo");
+      var trabajador_id = datosUsuarioMap['trabajador_id'];
+      var empresa_codigo = prefs.getString("empresa_codigo");
       String tokenStringId = qrCode;
       Map<String, dynamic> tokenMapId = JwtDecoder.decode(tokenStringId);
-      print('ID DE TRABAJADOR: '+trabajador_id.toString());
+      print('ID DE TRABAJADOR: ' + trabajador_id.toString());
+
       if (tokenMapId.containsKey("estaEscaneado")) {
         String escaneado = tokenMapId["estaEscaneado"];
-        String estaEscaneado = escaneado.toLowerCase();
-        bool yaFueEscaneado = (estaEscaneado == "true") ? true : false;
+        bool yaFueEscaneado = (escaneado.toLowerCase() == "true");
 
+        print('YA ESTA ESCANEADO '+yaFueEscaneado.toString());
         if (yaFueEscaneado) {
           Fluttertoast.showToast(
-            msg: 'Este QR ya fue escaneado gracias..',
+            msg: 'Este QR ya fue escaneado.',
             toastLength: Toast.LENGTH_LONG,
             gravity: ToastGravity.CENTER,
             backgroundColor: Colors.green,
@@ -180,61 +182,67 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             receiveTimeout: 6000,
           );
           var dio = Dio(options);
-          (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
-            client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+          (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+              (client) {
+            client.badCertificateCallback =
+                (X509Certificate cert, String host, int port) => true;
             return client;
           };
+
           var url = '$baseUrl/api/UsuarioL/actualizarToken';
 
-          dio
-              .post(
-            url,
-            data: {"token": tokenStringId},
-            options: Options(headers: {"Content-Type": "application/json"}),
-          )
-              .then((response) {
+          try {
+            Response response = await dio.post(
+              url,
+              data: {"token": tokenStringId},
+
+              options: Options(headers: {"Content-Type": "application/json"}),
+            );
+
+            print('token ACTUALIZAR '+response.data);
             Map<String, dynamic> tokenMapId = JwtDecoder.decode(response.data);
             prefs.setString("tokenVerificador", response.data);
 
             var urlFoto = '$baseUrl/api/Qr/QrFoto';
-            var empresaCodigo = prefs.get("empresaCodigo");
             var data = {"trabajador_id": trabajador_id, "empresa_codigo": empresa_codigo};
-            print('DATA_ '+data.toString());
-            dio
-                .post(
-                  urlFoto,
-                  options: Options(
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  ),
-                  data: data,
-                )
-                .then(
-                    (response) => (response) {
-                          var responseData = response.data;
-                          var item3 = responseData['item3'];
-                          var nombreCompleto = item3['trabajador_nombre_completo'];
-                          var fotoHex = item3['trabajador_foto'];
-                          var fotoBytes = hexToBytes(fotoHex);
-                          showScanSuccessDialog(nombreCompleto, fotoBytes);
-                          Fluttertoast.showToast(
-                            msg: 'Datos obtenidos correctamente',
-                            toastLength: Toast.LENGTH_LONG,
-                            gravity: ToastGravity.CENTER,
-                            backgroundColor: Colors.green,
-                            textColor: Colors.white,
-                            fontSize: 16.0,
-                          );
-                          print('Error: ${response.statusCode}');
-                        },
-                    onError: (error) => (error) {
-                          print('Error: ' + (error as DioError).response.toString());
-                        });
-          }).catchError((error) {
-            print('TERRIBLEEEEEEEEEE ');
-            print('Error: ' + (error as DioError).toString());
-          });
+
+            Response fotoResponse = await dio.post(
+              urlFoto,
+              options: Options(
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              ),
+              data: data,
+            );
+
+            var responseData = fotoResponse.data;
+            var item3 = responseData['item3'];
+            var nombreCompleto = item3['trabajador_nombre_completo'];
+            var fotoHex = item3['trabajador_foto'];
+            var fotoBytes = hexToBytes(fotoHex);
+
+            showScanSuccessDialog(nombreCompleto, fotoBytes);
+
+            Fluttertoast.showToast(
+              msg: 'Datos obtenidos correctamente',
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.CENTER,
+              backgroundColor: Colors.green,
+              textColor: Colors.white,
+              fontSize: 16.0,
+            );
+
+          } on DioError catch (e) {
+            if (e.response != null) {
+              print('Error en la respuesta: ${e.response!.statusCode}');
+              print('Detalle del error: ${e.response!.data}');
+            } else {
+              print('Error en la solicitud: ${e.message}');
+            }
+          } catch (e) {
+            print('Error general: $e');
+          }
         }
       }
     } else {
@@ -248,6 +256,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       );
     }
   }
+
 
   Future<void> requestCameraPermission() async {
     var status = await Permission.camera.status;

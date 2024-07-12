@@ -28,6 +28,8 @@ class _QrScreenState extends State<QrScreen> {
   String razonSocial = "";
   String qrData = "";
 
+  int scanValue=1;
+
   @override
   void initState() {
     super.initState();
@@ -101,6 +103,7 @@ class _QrScreenState extends State<QrScreen> {
                   children: [
                     Center(
                       child: QrImageView(
+
                         data: qrData.isNotEmpty ? qrData : "Default Data",
                         version: QrVersions.auto,
                         size: 250,
