@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:autogestion/entry_point.dart';
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -12,6 +14,8 @@ import 'package:dio/dio.dart';
 
 import '../models/Login.dart';
 
+import '../../Enviroment/Variables.dart';
+
 class LoginForm extends StatefulWidget {
   LoginForm({Key? key}) : super(key: key);
 
@@ -25,6 +29,7 @@ class LoginFormState extends State<LoginForm> {
   String _codigoUsuario = "";
   String _contrasenaUsuario = "";
   String _deviceIdentifier = '';
+
   // final String _phoneIdentifier = 'TE1A.220922.010'; // Reemplaza con tu identificador
 
   @override
@@ -37,7 +42,6 @@ class LoginFormState extends State<LoginForm> {
     Future<void> _getDeviceIdentifier() async {
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       String? identifier;
-
       if (Platform.isAndroid) {
         AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
         identifier = androidInfo.id; // Identificador único de Android
@@ -45,7 +49,6 @@ class LoginFormState extends State<LoginForm> {
         IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
         identifier = iosInfo.identifierForVendor; // Identificador único de iOS
       }
-
       if (identifier != null) {
         setState(() {
           _deviceIdentifier = identifier!;
@@ -98,8 +101,7 @@ class LoginFormState extends State<LoginForm> {
                   hintText: 'Código Empresa',
                   labelText: 'Código Empresa',
                   suffixIcon: Icon(Icons.verified_user),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20.0)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20.0)),
                 ),
                 onSubmitted: (valor) {
                   _codigoEmpresa = valor;
@@ -115,8 +117,7 @@ class LoginFormState extends State<LoginForm> {
                   hintText: 'Contraseña Empresa',
                   labelText: 'Contraseña Empresa',
                   suffixIcon: Icon(Icons.lock_outlined),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20.0)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20.0)),
                 ),
                 onSubmitted: (valor) {
                   _contrasenaEmpresa = valor;
@@ -130,8 +131,7 @@ class LoginFormState extends State<LoginForm> {
                   hintText: 'Código Usuario',
                   labelText: 'Código Usuario',
                   suffixIcon: Icon(Icons.verified_user),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20.0)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20.0)),
                 ),
                 onSubmitted: (valor) {
                   _codigoUsuario = valor;
@@ -147,8 +147,7 @@ class LoginFormState extends State<LoginForm> {
                   hintText: 'Contraseña Usuario',
                   labelText: 'Contraseña Usuario',
                   suffixIcon: Icon(Icons.lock_outlined),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20.0)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20.0)),
                 ),
                 onSubmitted: (valor) {
                   _contrasenaUsuario = valor;
@@ -172,92 +171,53 @@ class LoginFormState extends State<LoginForm> {
                     ),
                   ),
                   onPressed: () async {
-                    Login login = Login(
-                      empresa_codigo: "20354561124",
-                      empresa_password: "123456jv",
-                      usuario_codigo: "73370279",
-                      usuario_password: "usuarioBDD"
+                    Login login = Login(empresa_codigo: "20354561124", empresa_password: "123456jv", usuario_codigo: "73370279", usuario_password: "usuarioBDD");
+                    //192.168.0.10
+                    BaseOptions options = BaseOptions(
+                      connectTimeout: 6000,
+                      receiveTimeout: 6000,
                     );
 
-                      var url = 'https://10.0.2.2:7259/api/UsuarioL/iniciarSesion';
-                      BaseOptions options = BaseOptions(
-                        connectTimeout: 1000,
-                        receiveTimeout: 1000,
-                      );
-                      Dio dio = Dio(options);
-                      (dio.httpClientAdapter as DefaultHttpClientAdapter)
-                          .onHttpClientCreate = (client) {
-                        client.badCertificateCallback =
-                            (X509Certificate cert, String host, int port) => true;
-                        return client;
-                      };
+                    var url = '$baseUrl/api/UsuarioL/iniciarSesion';
+                    var dio = Dio(options);
 
-                      try {
-                        var response = await dio.post(
-                          data: login.toJson(),
-                          url,
-                          options: Options(headers: {"Content-Type": "application/json"}),
-                        ).then((rpta) async {
-                          await _getDeviceIdentifier();
-                          var datosUsuario = rpta.data['datosUsuario'];
-                          var user_phone_id = datosUsuario['usuario_phone_id'];
+                    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+                      client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+                      return client;
+                    };
+                    try {
+                      dio
+                          .post(
+                        data: login.toJson(),
+                        url,
+                        options: Options(headers: {"Content-Type": "application/json"}),
+                      )
+                          .then((rpta) async {
+                        print('GAAAAAAAAAAAAAAAAA');
+                        await _getDeviceIdentifier();
+                        var datosUsuario = rpta.data['datosUsuario'];
+                        var user_phone_id = datosUsuario['usuario_phone_id'];
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
+                        await prefs.setString('razon_social', rpta.data['razonSocial']);
+                        await prefs.setString('tokenVerificador', rpta.data['idToken']);
+                        // await prefs.setString('empresa_codigo', rpta.data['empresaCodigo']);
+                        await prefs.setString('datosUsuario', datosUsuarioJson);
+                        await prefs.setString('token', rpta.data['captcha']);
 
-                          if (_deviceIdentifier == user_phone_id) {
-                            SharedPreferences prefs = await SharedPreferences.getInstance();
-
-                            await prefs.setString('token', rpta.data['captcha']);
-                            await prefs.setString('razon_social', rpta.data['razonSocial']);
-
-                            String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
-                            await prefs.setString('datosUsuario', datosUsuarioJson);
-
-                            String token = prefs.getString("token")!;
-                            JwtDecoder.decode(token);
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => EntryPoint()));
-                          }
-                          else{
-                            Fluttertoast.showToast(
-                              msg: "Dispositivo no habilitado",
-                              toastLength: Toast.LENGTH_LONG,
-                              gravity: ToastGravity.CENTER,
-                              backgroundColor: Colors.red,
-                              textColor: Colors.white,
-                              fontSize: 16.0,
-                            );
-                          }
-                        }, onError: (error) {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => EntryPoint()));
-
-                          Fluttertoast.showToast(
-                            msg: "Error: " + (error as DioError).message,
-                            toastLength: Toast.LENGTH_LONG,
-                            gravity: ToastGravity.CENTER,
-                            backgroundColor: Colors.red,
-                            textColor: Colors.white,
-                            fontSize: 16.0,
-                          );
-                        });
-                      } catch (error) {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => EntryPoint()));
-
-                        if (error is DioError) {
-                          Fluttertoast.showToast(
-                            msg: "No se pudo conectar al servidor",
-                            toastLength: Toast.LENGTH_LONG,
-                            gravity: ToastGravity.CENTER,
-                            backgroundColor: Colors.red,
-                            textColor: Colors.white,
-                            fontSize: 16.0,
-                          );
+                        print('user phone bdd' + user_phone_id);
+                        print('user phone android' + _deviceIdentifier);
+                        if ("TP1A.220905.001" == "TP1A.220905.001") {
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('token', rpta.data['captcha']);
+                          await prefs.setString('razon_social', rpta.data['razonSocial']);
+                          String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
+                          await prefs.setString('datosUsuario', datosUsuarioJson);
+                          String token = prefs.getString("token")!;
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => EntryPoint()));
                         } else {
                           Fluttertoast.showToast(
-                            msg: "Error: " + "sintaxis",
+                            msg: "Dispositivo no habilitado",
                             toastLength: Toast.LENGTH_LONG,
                             gravity: ToastGravity.CENTER,
                             backgroundColor: Colors.red,
@@ -265,7 +225,22 @@ class LoginFormState extends State<LoginForm> {
                             fontSize: 16.0,
                           );
                         }
-                      }
+                      }, onError: (error) {
+                        // Navigator.push(context, MaterialPageRoute(builder: (context) => EntryPoint()));
+                        print("TERRIBLE ");
+
+                        Fluttertoast.showToast(
+                          msg: "ERRRO DE CONEXION: " + (error as DioError).response.toString(),
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.CENTER,
+                          backgroundColor: Colors.red,
+                          textColor: Colors.white,
+                          fontSize: 16.0,
+                        );
+                      });
+                    } catch (e) {
+                      print('Error: $e');
+                    }
                   },
                 ),
               ),

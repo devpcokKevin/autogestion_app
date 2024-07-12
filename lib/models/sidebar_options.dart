@@ -1,6 +1,7 @@
 import 'package:autogestion/screens/geocerca/geocerca_screen.dart';
 import 'package:autogestion/screens/miHorario/mi_horario_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/home/inicio_screen.dart';
 import '../screens/miPerfil/mi_perfil_screen.dart';
 import '../screens/miQr/mi_qr_screen.dart';
@@ -11,11 +12,13 @@ class MenuOption {
   final IconData icon;
   final String title;
   final Widget? view;
+  final Function()? onTap;
 
   MenuOption({
     required this.icon,
     required this.title,
     this.view,
+    this.onTap
   });
 }
 
@@ -69,9 +72,17 @@ List<MenuOption> sideMenu2 = [
   ),
 ];
 
+Future<void> clearSharedPreferences() async{
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.clear();
+}
+
 // Nueva opción de "Salir"
 MenuOption exitOption = MenuOption(
   icon: Icons.logout,
   title: "Salir",
-  view: LoginForm(), // Reemplaza con la vista correspondiente si es necesario
+  onTap:()async{
+    await clearSharedPreferences();
+  },
+  view: LoginForm()
 );

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class QRScannerOverlay extends StatefulWidget {
-  const QRScannerOverlay({Key? key, required this.overlayColour})
-      : super(key: key);
+  const QRScannerOverlay({Key? key, required this.overlayColour}) : super(key: key);
 
   final Color overlayColour;
 
@@ -10,8 +9,7 @@ class QRScannerOverlay extends StatefulWidget {
   _QRScannerOverlayState createState() => _QRScannerOverlayState();
 }
 
-class _QRScannerOverlayState extends State<QRScannerOverlay>
-    with SingleTickerProviderStateMixin {
+class _QRScannerOverlayState extends State<QRScannerOverlay> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 

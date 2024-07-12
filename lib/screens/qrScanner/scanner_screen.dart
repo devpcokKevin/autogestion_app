@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
-
+import 'package:dio/adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:get/get.dart';
 import 'package:dio/dio.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/appbar.dart';
 import 'qroverlay.dart';
 import 'package:autogestion/utils/constants.dart';
+import '../../Enviroment/Variables.dart';
 
 const bgColor = Color(0xffafafa);
 
@@ -19,14 +21,14 @@ class QRScannerScreen extends StatefulWidget {
   final String appBarTitle;
   final IconData appBarIcon;
 
+  @override
+  State<QRScannerScreen> createState() => _QRScannerScreenState();
+
   const QRScannerScreen({
     Key? key,
     required this.appBarTitle,
     required this.appBarIcon,
   }) : super(key: key);
-
-  @override
-  State<QRScannerScreen> createState() => _QRScannerScreenState();
 }
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
@@ -144,50 +146,105 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   Future<void> sendQrDataToServer(String qrCode) async {
-    var dio = Dio();
-    var url = 'http://10.143.0.33:7259/api/Qr/QrFoto';
-    var data = {
-      "trabajador_id": 20019,
-      "empresa_codigo": "20354561124"
-    };
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    try {
-      final response = await dio.post(
-        url,
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-          },
-        ),
-        data: data,
-      );
+    var datosUsuarioMap = jsonDecode(prefs.getString("datosUsuario")!)  as Map<String, dynamic>;
+    bool esTrabajador = (datosUsuarioMap['usuario_esTrabajador'] == "True") ? true : false;
 
-      if (response.statusCode == 200) {
-        print('Response status: ${response.statusCode}');
-        print('Response data: ${response.data}');
+    print('ES TRABAJADOR: '+esTrabajador.toString());
 
-        var responseData = response.data;
-        var item3 = responseData['item3'];
-        var nombreCompleto = item3['trabajador_nombre_completo'];
-        var fotoHex = item3['trabajador_foto'];
-        var fotoBytes = hexToBytes(fotoHex);
+    if (esTrabajador) {
 
-        showScanSuccessDialog(nombreCompleto, fotoBytes);
+      var trabajador_id = (datosUsuarioMap['trabajador_id']);
+      String tokenStringId = qrCode;
+      Map<String, dynamic> tokenMapId = JwtDecoder.decode(tokenStringId);
+      print('ID DE TRABAJADOR: '+trabajador_id.toString());
+      if (tokenMapId.containsKey("estaEscaneado")) {
+        String escaneado = tokenMapId["estaEscaneado"];
+        String estaEscaneado = escaneado.toLowerCase();
+        bool yaFueEscaneado = (estaEscaneado == "true") ? true : false;
 
-        Fluttertoast.showToast(
-          msg: 'Datos obtenidos correctamente',
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
-          backgroundColor: Colors.green,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
+        if (yaFueEscaneado) {
+          Fluttertoast.showToast(
+            msg: 'Este QR ya fue escaneado gracias..',
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.CENTER,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+        } else {
+          BaseOptions options = BaseOptions(
+            connectTimeout: 6000,
+            receiveTimeout: 6000,
+          );
+          var dio = Dio(options);
+          (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+            client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+            return client;
+          };
+          var url = '$baseUrl/api/UsuarioL/actualizarToken';
 
-      } else {
-        print('Error: ${response.statusCode}');
+          dio
+              .post(
+            url,
+            data: {"token": tokenStringId},
+            options: Options(headers: {"Content-Type": "application/json"}),
+          )
+              .then((response) {
+            Map<String, dynamic> tokenMapId = JwtDecoder.decode(response.data);
+            prefs.setString("tokenVerificador", response.data);
+
+            var urlFoto = '$baseUrl/api/Qr/QrFoto';
+            var empresaCodigo = prefs.get("empresaCodigo");
+            var data = {"trabajador_id": trabajador_id, "empresa_codigo": "20354561124"};
+            print('DATA_ '+data.toString());
+            dio
+                .post(
+                  urlFoto,
+                  options: Options(
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  ),
+                  data: data,
+                )
+                .then(
+                    (response) => (response) {
+                          var responseData = response.data;
+                          var item3 = responseData['item3'];
+                          var nombreCompleto = item3['trabajador_nombre_completo'];
+                          var fotoHex = item3['trabajador_foto'];
+                          var fotoBytes = hexToBytes(fotoHex);
+                          showScanSuccessDialog(nombreCompleto, fotoBytes);
+                          Fluttertoast.showToast(
+                            msg: 'Datos obtenidos correctamente',
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.CENTER,
+                            backgroundColor: Colors.green,
+                            textColor: Colors.white,
+                            fontSize: 16.0,
+                          );
+                          print('Error: ${response.statusCode}');
+                        },
+                    onError: (error) => (error) {
+                          print('Error: ' + (error as DioError).response.toString());
+                        });
+          }).catchError((error) {
+            print('TERRIBLEEEEEEEEEE ');
+            print('Error: ' + (error as DioError).toString());
+          });
+        }
       }
-    } catch (e) {
-      print('Error: $e');
+    } else {
+      Fluttertoast.showToast(
+        msg: 'Este usuario no es un trabajador',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     }
   }
 
@@ -267,7 +324,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                           width: MediaQuery.of(context).size.width * 0.84, // Ajuste el ancho del escáner aquí
                           height: double.infinity,
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20), // Añade los bordes circulares aquí
+                            borderRadius: BorderRadius.circular(20),
+                            // Añade los bordes circulares aquí
                             child: MobileScanner(
                               allowDuplicates: true,
                               controller: controller,
@@ -278,7 +336,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                                     isScanCompleted = true;
                                     isScanningEnabled = false;
                                   });
-
                                   sendQrDataToServer(code);
                                   startScanSuccessTimer();
                                 }

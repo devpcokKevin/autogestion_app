@@ -8,9 +8,10 @@ import '../models/sidebar_options.dart';
 import 'info_card.dart';
 
 class SideMenu extends StatefulWidget {
+  final VoidCallback onExitOptionClicked; // Añadir un callback para la opción de salir
   final Function(Widget) onMenuItemClicked;
 
-  const SideMenu({required this.onMenuItemClicked, super.key});
+  const SideMenu({required this.onMenuItemClicked, required this.onExitOptionClicked, super.key});
 
   @override
   State<SideMenu> createState() => _SideMenuState();
@@ -58,18 +59,17 @@ class _SideMenuState extends State<SideMenu> {
                 padding: const EdgeInsets.only(left: 24, top: 32, bottom: 16),
                 child: Text(
                   "General".toUpperCase(),
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium!
-                      .copyWith(color: Colors.white70),
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.white70),
                 ),
               ),
               ...sideMenus.map(
                 (menu) => SideMenuTile(
                   menu: menu,
                   press: () {
-                    widget.onMenuItemClicked(menu
-                        .view!); // Notifica al EntryPoint de la vista seleccionada
+                    if (menu.onTap != null) {
+                      menu.onTap!();
+                    }
+                    widget.onMenuItemClicked(menu.view!); // Notifica al EntryPoint de la vista seleccionada
                     setState(() {
                       selectedMenu = menu;
                     });
@@ -81,18 +81,14 @@ class _SideMenuState extends State<SideMenu> {
                 padding: const EdgeInsets.only(left: 24, top: 32, bottom: 16),
                 child: Text(
                   "RR.HH".toUpperCase(),
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium!
-                      .copyWith(color: Colors.white70),
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.white70),
                 ),
               ),
               ...sideMenu2.map(
                 (menu) => SideMenuTile(
                   menu: menu,
                   press: () {
-                    widget.onMenuItemClicked(menu
-                        .view!); // Notifica al EntryPoint de la vista seleccionada
+                    widget.onMenuItemClicked(menu.view!); // Notifica al EntryPoint de la vista seleccionada
                     setState(() {
                       selectedMenu = menu;
                     });
@@ -104,8 +100,13 @@ class _SideMenuState extends State<SideMenu> {
               SideMenuTile(
                 menu: exitOption,
                 press: () {
-                  widget.onMenuItemClicked(exitOption
-                      .view!); // Notifica al EntryPoint de la vista seleccionada
+                  if (exitOption.onTap != null) {
+                    exitOption.onTap!();
+                  }
+
+                  widget.onMenuItemClicked(exitOption.view!); // Notifica al EntryPoint de la vista seleccionada
+                  widget.onExitOptionClicked();
+
                   setState(() {
                     selectedMenu = exitOption;
                   });

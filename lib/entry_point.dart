@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:autogestion/components/side_menu.dart';
 import 'package:autogestion/screens/home/inicio_screen.dart';
+import 'package:autogestion/src/login.dart';
 import 'package:autogestion/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'models/menu_btn.dart';
@@ -12,31 +13,25 @@ class EntryPoint extends StatefulWidget {
   State<EntryPoint> createState() => _EntryPointState();
 }
 
-class _EntryPointState extends State<EntryPoint>
-    with SingleTickerProviderStateMixin {
-
+class _EntryPointState extends State<EntryPoint> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> animation;
   late Animation<double> scalAnimation;
-
   bool isSideMenuClosed = true;
-  Widget currentView = InicioScreen(appBarTitle: "Inicio",
-      appBarIcon: Icons
-          .home); // Inicialmente se muestra HomePage
+  Widget currentView = InicioScreen(appBarTitle: "Inicio", appBarIcon: Icons.home); // Inicialmente se muestra HomePage
 
   @override
   void initState() {
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
     )..addListener(() {
-      setState(() {});
-    });
-
-    animation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
-        parent: _animationController, curve: Curves.fastOutSlowIn));
-    scalAnimation = Tween<double>(begin: 1, end: .8).animate(CurvedAnimation(
-        parent: _animationController, curve: Curves.fastOutSlowIn));
+        setState(() {});
+      });
+    bool isSideMenuVisible = true;
+    animation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _animationController, curve: Curves.fastOutSlowIn));
+    scalAnimation = Tween<double>(begin: 1, end: .8).animate(CurvedAnimation(parent: _animationController, curve: Curves.fastOutSlowIn));
     super.initState();
   }
 
@@ -50,8 +45,19 @@ class _EntryPointState extends State<EntryPoint>
     setState(() {
       currentView = view;
     });
+    _animationController.reverse();
+    setState(() {
+      print('SDAÑASHDASLDHJLASHDKHASDH');
+      this.isSideMenuClosed = false;
+    });
   }
-
+  void hideSideMenu() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginForm()), // Navega a LoginForm
+          (route) => false, // Elimina todas las rutas anteriores
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +80,7 @@ class _EntryPointState extends State<EntryPoint>
                   isSideMenuClosed = true;
                 });
               },
+              onExitOptionClicked: hideSideMenu,
             ),
           ),
           Transform(
@@ -101,8 +108,10 @@ class _EntryPointState extends State<EntryPoint>
               press: () {
                 if (isSideMenuClosed) {
                   _animationController.forward();
+                  print("ABRIENDOSE");
                 } else {
                   _animationController.reverse();
+                  print("CERRADO");
                 }
                 setState(() {
                   isSideMenuClosed = !isSideMenuClosed;
