@@ -1,6 +1,8 @@
+import 'package:autogestion/screens/geocerca/geocerca_screen.dart';
 import 'package:autogestion/src/login.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'components/side_menu.dart';
 
 void main() {

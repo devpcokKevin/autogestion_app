@@ -200,6 +200,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "8.2.6"
+  geolocator:
+    dependency: "direct main"
+    description:
+      name: geolocator
+      sha256: "5c496b46e245d006760e643cedde7c9fa785a34391b5eca857a46358f9bde02b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.2.1"
+  geolocator_android:
+    dependency: transitive
+    description:
+      name: geolocator_android
+      sha256: "3fa9215caf1e4463adbdf1f21b07fdcb9bc2af2ef1df3715a52376b87bebb087"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.1"
+  geolocator_apple:
+    dependency: transitive
+    description:
+      name: geolocator_apple
+      sha256: bc2aca02423ad429cb0556121f56e60360a2b7d694c8570301d06ea0c00732fd
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.7"
+  geolocator_platform_interface:
+    dependency: transitive
+    description:
+      name: geolocator_platform_interface
+      sha256: "386ce3d9cce47838355000070b1d0b13efb5bc430f8ecda7e9238c8409ace012"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.4"
+  geolocator_web:
+    dependency: transitive
+    description:
+      name: geolocator_web
+      sha256: "102e7da05b48ca6bf0a5bda0010f886b171d1a08059f01bfe02addd0175ebece"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.1"
+  geolocator_windows:
+    dependency: transitive
+    description:
+      name: geolocator_windows
+      sha256: "4f4218f122a6978d0ad655fa3541eea74c67417440b09f0657238810d5af6bdc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.3"
   get:
     dependency: "direct main"
     description:
@@ -228,18 +276,18 @@ packages:
     dependency: transitive
     description:
       name: google_maps_flutter_android
-      sha256: bfeab0c16630ba202cca1f9da80b8eb2922f2520195f7117056c36dabb79828f
+      sha256: f6306d83edddba7aa017ca6f547d6f36a1443f90ed49d91d48ef70d7aa86e2e1
       url: "https://pub.dev"
     source: hosted
-    version: "2.11.0"
+    version: "2.12.0"
   google_maps_flutter_ios:
     dependency: transitive
     description:
       name: google_maps_flutter_ios
-      sha256: "1043d0a4ad52612444b24edbd2d61f6de40e01e842fe2a9248be53fa70bc7047"
+      sha256: a6e3c6ecdda6c985053f944be13a0645ebb919da2ef0f5bc579c5e1670a5b2a8
       url: "https://pub.dev"
     source: hosted
-    version: "2.8.1"
+    version: "2.10.0"
   google_maps_flutter_platform_interface:
     dependency: transitive
     description:
@@ -300,10 +348,10 @@ packages:
     dependency: transitive
     description:
       name: image_picker_android
-      sha256: "4161e1f843d8480d2e9025ee22411778c3c9eb7e40076dcf2da23d8242b7b51c"
+      sha256: ff39a10ab4f48f4ac70776d0494a97bf073cd2570892cd46bc8a5cac162c25db
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.12+3"
+    version: "0.8.12+4"
   image_picker_for_web:
     dependency: transitive
     description:
@@ -516,10 +564,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_windows
-      sha256: "8bc9f22eee8690981c22aa7fc602f5c85b497a6fb2ceb35ee5a5e5ed85ad8170"
+      sha256: bd6f00dbd873bfb70d0761682da2b3a2c2fccc2b9e84c495821639601d81afe7
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.1"
+    version: "2.3.0"
   permission_handler:
     dependency: "direct main"
     description:
@@ -737,26 +785,26 @@ packages:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_calendar
-      sha256: cad70ee6c5f52f57891c7eee2969017e2c5d852c9c97ed277cdbcc4b172f3943
+      sha256: ea67bdbd2b00015c3485dc50be40370d075fbe5012aeada596b7c30bca3f52ee
       url: "https://pub.dev"
     source: hosted
-    version: "26.1.40"
+    version: "26.1.42"
   syncfusion_flutter_core:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: "87cbeee9b916e013eedbd43bf07f253c34dd5184c88325e5227434e0f8b89a68"
+      sha256: "76c0efa89c79108f043602b0170512f88fcb83156cca7f5ca6dfe17e840bc63d"
       url: "https://pub.dev"
     source: hosted
-    version: "26.1.40"
+    version: "26.1.42"
   syncfusion_flutter_datepicker:
     dependency: transitive
     description:
       name: syncfusion_flutter_datepicker
-      sha256: ebc10c86618a8c410f4707dc6ff354daccb13d5f8a65f5fffa69a07806e4e0dd
+      sha256: "641ddcfb86b8d5510624d038da899860fb61857bd99420c1dd6cb6560ce6a99f"
       url: "https://pub.dev"
     source: hosted
-    version: "26.1.40"
+    version: "26.1.42"
   term_glyph:
     dependency: transitive
     description:
