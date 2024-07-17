@@ -69,7 +69,7 @@ MenuOption exitOption = MenuOption(
     icon: Icons.logout,
     title: "Salir",
     onTap: () async {
-      var url = '$baseUrl/api/UsuarioL/cerrarSesion';
+      var url = '$baseUrl/api/UsuarioL/cerrarSesionNuevo';
       SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
       var datosUsuario = sharedPreferences.getString("datosUsuario");
       print('datosUsuario: ' + datosUsuario.toString());
@@ -88,7 +88,7 @@ MenuOption exitOption = MenuOption(
           .then((rpta) async {
             
         print('rpta: ' + rpta.toString());
-      }).catchError();
+      });
 
       await clearSharedPreferences();
     },

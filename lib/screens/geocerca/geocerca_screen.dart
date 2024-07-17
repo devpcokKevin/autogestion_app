@@ -13,21 +13,7 @@ import 'package:geolocator/geolocator.dart';
 import 'components/address_info.dart';
 import '../../shared/appbar.dart';
 import 'components/geocerca_info.dart';
-
-class SlideUpAnimation extends StatelessWidget {
-  final Animation<Offset> animation;
-  final Widget child;
-
-  SlideUpAnimation({required this.animation, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return SlideTransition(
-      position: animation,
-      child: child,
-    );
-  }
-}
+import '../../Enviroment/Variables.dart';
 
 class GoogleMapScreen extends StatefulWidget {
   final String appBarTitle;
@@ -55,6 +41,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
 
   bool isRadioButtonChecked = true;
   bool resetCircleRadius = false; // Bandera para restablecer el radio
+  bool showAreaButtons = false; // Mostrar/ocultar los botones
 
   TextEditingController areaNameController = TextEditingController();
   TextEditingController areaDescriptionController = TextEditingController();
@@ -72,7 +59,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       vsync: this,
     );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 1.0),
+      begin: const Offset(1.0, 0.0),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _slideController,
@@ -252,11 +239,10 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   // Método para enviar los datos del área al servidor
-  void _sendAreaDataToServer(String geocerca_nombre,
-      String geocerca_descripcion,
+  void _sendAreaDataToServer(String geocerca_nombre, String geocerca_descripcion,
       List<Map<String, dynamic>> data_delimitador) async {
     var dio = Dio();
-    var url = 'http://192.168.0.10:7259/api/Geocerca/regGeocercaDelimitador';
+    var url = '$baseUrl/api/Geocerca/regGeocercaDelimitador';
     var datageo = {
       "empresa_codigo": "20354561124",
       "geocerca_nombre": geocerca_nombre,
@@ -296,7 +282,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
       return client;
     };
-    var url = 'https://10.0.2.2:7259/api/Geocerca/ListaGeocerca?empresa_codigo=20354561124';
+    var url = '$baseUrl/api/Geocerca/ListaGeocerca?empresa_codigo=20354561124';
     try {
       final response = await dio.get(url);
       if (response.statusCode == 200) {
@@ -323,7 +309,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
       return client;
     };
-    var url = 'https://10.0.2.2:7259/api/Geocerca/listGeocercaDelimitador';
+    var url = '$baseUrl/api/Geocerca/listGeocercaDelimitador';
     var data = {
       "empresa_codigo": "20354561124",
       "geocerca_id": geocercaId,
@@ -378,22 +364,21 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                 child: ListView.separated(
                   itemCount: geocercas.length,
                   itemBuilder: (BuildContext context, int index) {
+                    String nombre = geocercas[index]['geocercaSelect_nombre'] ?? 'Nombre no disponible';
+                    String descripcion = geocercas[index]['geocercaSelect_descripcion'] ?? 'Descripción no disponible';
+
                     return ListTile(
                       contentPadding: EdgeInsets.symmetric(
                           vertical: 0.0, horizontal: 16.0),
-                      title: Text(geocercas[index]['geocercaSelect_nombre']),
+                      title: Text(nombre),
                       onTap: () {
                         setState(() {
-                          selectedGeocercaNombre =
-                          geocercas[index]['geocercaSelect_nombre'];
-                          print("geocerca nombre:" + selectedGeocercaNombre);
-                          selectedGeocercaDescripcion =
-                          geocercas[index]['geocercaSelect_descripcion'];
-                          print("geocerca descripcion:" +
-                              selectedGeocercaDescripcion);
+                          selectedGeocercaNombre = nombre;
+                          selectedGeocercaDescripcion = descripcion;
+                          print("geocerca nombre: $selectedGeocercaNombre");
+                          print("geocerca descripcion: $selectedGeocercaDescripcion");
                         });
-                        Navigator.pop(
-                            context, geocercas[index]['geocercaSelect_id']);
+                        Navigator.pop(context, geocercas[index]['geocercaSelect_id']);
                       },
                     );
                   },
@@ -414,6 +399,21 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
         print('Geocerca seleccionada con ID: $selectedGeocercaId');
         await postSelectedGeocerca(selectedGeocercaId);
       }
+    });
+  }
+
+  void toggleAreaButtons() {
+    setState(() {
+      showAreaButtons = !showAreaButtons;
+    });
+  }
+
+  void selectArea(bool isRadioButton) {
+    setState(() {
+      isRadioButtonChecked = isRadioButton;
+      blueMarkerLocation = null;
+      polygonPoints.clear();
+      showAreaButtons = false;
     });
   }
 
@@ -540,14 +540,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                   },
                 ),
               ),
-              SlideUpAnimation(
-                animation: _slideAnimation,
-                child: Visibility(
-                  visible: hasSelectedGeocerca,
-                  child: GeocercaInfo(
-                    geocerca_nombre: selectedGeocercaNombre,
-                    geocerca_descripcion: selectedGeocercaDescripcion,
-                  ),
+              Visibility(
+                visible: hasSelectedGeocerca,
+                child: GeocercaInfo(
+                  geocerca_nombre: selectedGeocercaNombre,
+                  geocerca_descripcion: selectedGeocercaDescripcion,
                 ),
               ),
             ],
@@ -604,23 +601,52 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                FloatingActionButton(
-                  onPressed: () {
-                    setState(() {
-                      isRadioButtonChecked = !isRadioButtonChecked;
-                      blueMarkerLocation = null;
-                      polygonPoints.clear();
-                      _slideController.reverse();
-                      hasSelectedGeocerca = false;
-                    });
-                  },
-                  child: Icon(
-                    isRadioButtonChecked
-                        ? Icons.radio_button_checked
-                        : Icons.add_location_alt,
-                  ),
-                  backgroundColor: Colors.blue,
-                  shape: CircleBorder(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (showAreaButtons)
+                      Row(
+                        children: [
+                          SlideTransition(
+                            position: _slideAnimation,
+                            child: FloatingActionButton(
+                              onPressed: () {
+                                selectArea(true);
+                              },
+                              child: Icon(Icons.radio_button_checked),
+                              backgroundColor: Colors.blue,
+                              shape: CircleBorder(),
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          SlideTransition(
+                            position: _slideAnimation,
+                            child: FloatingActionButton(
+                              onPressed: () {
+                                selectArea(false);
+                              },
+                              child: Icon(Icons.add_location_alt),
+                              backgroundColor: Colors.blue,
+                              shape: CircleBorder(),
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                        ],
+                      ),
+                    FloatingActionButton(
+                      onPressed: () {
+                        toggleAreaButtons();
+                        if (showAreaButtons) {
+                          _slideController.forward();
+                        } else {
+                          _slideController.reverse();
+                        }
+                      },
+                      child: Icon(Icons.tune),
+                      backgroundColor: Colors.blue,
+                      shape: CircleBorder(),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 16),
                 FloatingActionButton(
