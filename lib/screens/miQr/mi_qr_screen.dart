@@ -17,6 +17,9 @@ class QrScreen extends StatefulWidget {
   State<QrScreen> createState() => _QrScreenState();
 }
 
+
+
+
 class _QrScreenState extends State<QrScreen> {
   final GlobalKey globalKey = GlobalKey();
 
@@ -27,8 +30,6 @@ class _QrScreenState extends State<QrScreen> {
   String usuarioId = "";
   String razonSocial = "";
   String qrData = "";
-
-  int scanValue=1;
 
   @override
   void initState() {
@@ -103,7 +104,6 @@ class _QrScreenState extends State<QrScreen> {
                   children: [
                     Center(
                       child: QrImageView(
-
                         data: qrData.isNotEmpty ? qrData : "Default Data",
                         version: QrVersions.auto,
                         size: 250,
@@ -170,13 +170,14 @@ class _QrScreenState extends State<QrScreen> {
                               options: Options(headers: {"Content-Type": "application/json"}),
                             )
                                 .then(
-                              (response) async {
+                                  (response) async {
                                 print('SE LOGRO: ' + response.data.toString());
                                 SharedPreferences prefs = await SharedPreferences.getInstance();
                                 prefs.setString("tokenVerificador", response.data.toString());
                               },
                             ).catchError(
-                              (error) {
+                                  (error) {
+
                                 if (error is DioError) {
                                   print('Error de red: ' + error.response.toString());
                                 } else {
@@ -217,3 +218,4 @@ class _QrScreenState extends State<QrScreen> {
     );
   }
 }
+

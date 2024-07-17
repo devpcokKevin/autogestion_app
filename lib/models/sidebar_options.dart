@@ -1,7 +1,13 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:autogestion/screens/geocerca/geocerca_screen.dart';
 import 'package:autogestion/screens/miHorario/mi_horario_screen.dart';
+import 'package:dio/adapter.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../Enviroment/Variables.dart';
 import '../screens/home/inicio_screen.dart';
 import '../screens/miPerfil/mi_perfil_screen.dart';
 import '../screens/miQr/mi_qr_screen.dart';
@@ -82,7 +88,25 @@ MenuOption exitOption = MenuOption(
   icon: Icons.logout,
   title: "Salir",
   onTap:()async{
+
+    var url = '$baseUrl/api/UsuarioL/cerrarSesion';
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    var datosUsuario = sharedPreferences.getString("datosUsuario");
+    print('datosUsuario: '+datosUsuario.toString());
+
+    Dio dio = Dio();
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+      client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+      return client;
+    };
+    // dio.post(
+    //   data: datosUsuario,
+    //   url,
+    //   options: Options(headers: {"Content-Type": "application/json"}),
+    // ).then()
+
     await clearSharedPreferences();
+
   },
   view: LoginForm()
 );

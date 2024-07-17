@@ -24,6 +24,7 @@ class LoginForm extends StatefulWidget {
 }
 
 class LoginFormState extends State<LoginForm> {
+
   String _codigoEmpresa = "";
   String _contrasenaEmpresa = "";
   String _codigoUsuario = "";
@@ -193,19 +194,18 @@ class LoginFormState extends State<LoginForm> {
                         options: Options(headers: {"Content-Type": "application/json"}),
                       )
                           .then((rpta) async {
-                        print('GAAAAAAAAAAAAAAAAA');
+
                         await _getDeviceIdentifier();
                         var datosUsuario = rpta.data['datosUsuario'];
                         var user_phone_id = datosUsuario['usuario_phone_id'];
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
                         await prefs.setString('razon_social', rpta.data['razonSocial']);
-                        await prefs.setString('empresa_codigo', rpta.data['empresa_codigo']);
+                        // await prefs.setString('empresa_codigo', rpta.data['empresa_codigo']);
                         await prefs.setString('tokenVerificador', rpta.data['idToken']);
                         // await prefs.setString('empresa_codigo', rpta.data['empresaCodigo']);
                         await prefs.setString('datosUsuario', datosUsuarioJson);
                         await prefs.setString('token', rpta.data['captcha']);
-
                         print('user phone bdd' + user_phone_id);
                         print('user phone android' + _deviceIdentifier);
                         if ("TP1A.220905.001" == "TP1A.220905.001") {
@@ -227,11 +227,12 @@ class LoginFormState extends State<LoginForm> {
                           );
                         }
                       }, onError: (error) {
+
                         // Navigator.push(context, MaterialPageRoute(builder: (context) => EntryPoint()));
                         print("TERRIBLE ");
 
                         Fluttertoast.showToast(
-                          msg: "ERRRO DE CONEXION: " + (error as DioError).response.toString(),
+                          msg: "Error de conexion: " + (error as DioError).response.toString(),
                           toastLength: Toast.LENGTH_LONG,
                           gravity: ToastGravity.CENTER,
                           backgroundColor: Colors.red,
