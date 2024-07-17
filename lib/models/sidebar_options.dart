@@ -20,29 +20,19 @@ class MenuOption {
   final Widget? view;
   final Function()? onTap;
 
-  MenuOption({
-    required this.icon,
-    required this.title,
-    this.view,
-    this.onTap
-  });
+  MenuOption({required this.icon, required this.title, this.view, this.onTap});
 }
 
 List<MenuOption> sideMenus = [
   MenuOption(
     icon: Icons.home,
     title: "Inicio",
-    view: InicioScreen(appBarTitle: "Inicio",
-        appBarIcon: Icons
-            .home),
+    view: InicioScreen(appBarTitle: "Inicio", appBarIcon: Icons.home),
   ),
   MenuOption(
     icon: Icons.person,
     title: "Mi Perfil",
-    view: miPerfilScreen(
-        appBarTitle: "Mi Perfil",
-        appBarIcon: Icons
-            .person), // Reemplaza con la vista correspondiente si es necesario
+    view: miPerfilScreen(appBarTitle: "Mi Perfil", appBarIcon: Icons.person), // Reemplaza con la vista correspondiente si es necesario
   ),
   MenuOption(
     icon: Icons.qr_code_scanner,
@@ -52,10 +42,7 @@ List<MenuOption> sideMenus = [
   MenuOption(
     icon: Icons.barcode_reader,
     title: "Escaner",
-    view: QRScannerScreen(
-        appBarTitle: "Escaner",
-        appBarIcon: Icons
-            .barcode_reader), // Reemplaza con la vista correspondiente si es necesario
+    view: QRScannerScreen(appBarTitle: "Escaner", appBarIcon: Icons.barcode_reader), // Reemplaza con la vista correspondiente si es necesario
   ),
 ];
 
@@ -63,50 +50,46 @@ List<MenuOption> sideMenu2 = [
   MenuOption(
     icon: Icons.calendar_month,
     title: "Mi Horario",
-    view: miHorarioScreen(
-        appBarTitle: "Mi Horario",
-        appBarIcon: Icons
-            .calendar_month), // Reemplaza con la vista correspondiente si es necesario
+    view: miHorarioScreen(appBarTitle: "Mi Horario", appBarIcon: Icons.calendar_month), // Reemplaza con la vista correspondiente si es necesario
   ),
   MenuOption(
     icon: Icons.notifications,
     title: "Geocerca",
-    view: GoogleMapScreen(
-        appBarTitle: "Geocerca",
-        appBarIcon: Icons
-            .location_on), // Reemplaza con la vista correspondiente si es necesario
+    view: GoogleMapScreen(appBarTitle: "Geocerca", appBarIcon: Icons.location_on), // Reemplaza con la vista correspondiente si es necesario
   ),
 ];
 
-Future<void> clearSharedPreferences() async{
+Future<void> clearSharedPreferences() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   prefs.clear();
 }
 
 // Nueva opción de "Salir"
 MenuOption exitOption = MenuOption(
-  icon: Icons.logout,
-  title: "Salir",
-  onTap:()async{
+    icon: Icons.logout,
+    title: "Salir",
+    onTap: () async {
+      var url = '$baseUrl/api/UsuarioL/cerrarSesion';
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      var datosUsuario = sharedPreferences.getString("datosUsuario");
+      print('datosUsuario: ' + datosUsuario.toString());
 
-    var url = '$baseUrl/api/UsuarioL/cerrarSesion';
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    var datosUsuario = sharedPreferences.getString("datosUsuario");
-    print('datosUsuario: '+datosUsuario.toString());
+      Dio dio = Dio();
+      (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+        client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+        return client;
+      };
+      dio
+          .post(
+        data: datosUsuario,
+        url,
+        options: Options(headers: {"Content-Type": "application/json"}),
+      )
+          .then((rpta) async {
+            
+        print('rpta: ' + rpta.toString());
+      }).catchError();
 
-    Dio dio = Dio();
-    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
-      client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-      return client;
-    };
-    // dio.post(
-    //   data: datosUsuario,
-    //   url,
-    //   options: Options(headers: {"Content-Type": "application/json"}),
-    // ).then()
-
-    await clearSharedPreferences();
-
-  },
-  view: LoginForm()
-);
+      await clearSharedPreferences();
+    },
+    view: LoginForm());
