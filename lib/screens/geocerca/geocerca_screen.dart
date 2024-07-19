@@ -125,6 +125,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
     setState(() {
       movingPoint = null;
     });
+    _updateGeocercaInfoVisibility();
   }
 
   // Agrega un nuevo punto al polígono.
@@ -132,6 +133,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
     setState(() {
       polygonPoints.add(point);
     });
+    _updateGeocercaInfoVisibility();
   }
 
   // Elimina un punto del polígono.
@@ -140,6 +142,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       polygonPoints.remove(point);
       movingPoint = null;
     });
+    _updateGeocercaInfoVisibility();
   }
 
   void _showDeleteOption(LatLng point, {bool isBlueMarker = false}) {
@@ -158,9 +161,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                     setState(() {
                       blueMarkerLocation = null;
                       resetCircleRadius = true; // Activar la bandera para restablecer el radio
+                      showAreaButtons = false; // Ocultar los botones
                     });
                   } else {
                     _removePolygonPoint(point);
+                    showAreaButtons = false; // Ocultar los botones
                   }
                 },
               ),
@@ -180,20 +185,50 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
     List<Map<String, dynamic>> data_delimitador = polygonPoints.map((point) {
       return {
         'delimitador_latitud': point.latitude.toString(),
-        'delimitador_longitud': point.longitude.toString()
+        'delimitador_longitud': point.longitude.toString(),
+        'delimitador_radio': null
       };
     }).toList();
 
-    // Aquí puedes llamar a _sendAreaDataToServer si necesitas enviar los datos al servidor
     _sendAreaDataToServer(
         geocerca_nombre, geocerca_descripcion, data_delimitador);
 
     // Cerrar el modal
     Navigator.of(context).pop();
+    setState(() {
+      showAreaButtons = false; // Ocultar los botones
+    });
+  }
+
+  void _saveCircleArea() async {
+    // Obtener el nombre y la descripción del área de los controladores de texto
+    String geocerca_nombre = areaNameController.text;
+    String geocerca_descripcion = areaDescriptionController.text;
+
+    // Construir el data_delimitador con el radio del círculo
+    List<Map<String, dynamic>> data_delimitador = [
+      {
+        'delimitador_latitud': blueMarkerLocation!.latitude.toString(),
+        'delimitador_longitud': blueMarkerLocation!.longitude.toString(),
+        'delimitador_radio': circleRadius.toString()
+      }
+    ];
+
+    _sendAreaDataToServer(
+        geocerca_nombre, geocerca_descripcion, data_delimitador);
+
+    // Cerrar el modal
+    Navigator.of(context).pop();
+    setState(() {
+      showAreaButtons = false; // Ocultar los botones
+    });
   }
 
   // Modal Guardar Geocerca
   void modalGuardarGeocerca() async {
+    setState(() {
+      showAreaButtons = false; // Ocultar los botones
+    });
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -229,7 +264,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             TextButton(
               child: Text("Guardar"),
               onPressed: () {
-                _savePolygonPoints();
+                if (isRadioButtonChecked && blueMarkerLocation != null) {
+                  _saveCircleArea();
+                } else {
+                  _savePolygonPoints();
+                }
               },
             ),
           ],
@@ -326,11 +365,22 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
           for (var delimiter in delimiters) {
             double lat = double.parse(delimiter['delimitador_latitud']);
             double lng = double.parse(delimiter['delimitador_longitud']);
-            _addPolygonPoint(LatLng(lat, lng));
+            if (delimiter['delimitador_radio'] != null) {
+              // Es un área circular
+              setState(() {
+                blueMarkerLocation = LatLng(lat, lng);
+                circleRadius = double.parse(delimiter['delimitador_radio']);
+                isRadioButtonChecked = true;
+              });
+            } else {
+              // Es un polígono
+              _addPolygonPoint(LatLng(lat, lng));
+            }
           }
         }
         setState(() {
           hasSelectedGeocerca = true;
+          showAreaButtons = false; // Ocultar los botones
         });
         _slideController.forward();
       } else {
@@ -342,7 +392,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void showGeocercasModal(BuildContext context) async {
+    setState(() {
+      showAreaButtons = false; // Ocultar los botones
+    });
     List<Map<String, dynamic>> geocercas = await fetchGeocercas();
+    print("--------------------------------------------------------------");
     print(geocercas);
     showModalBottomSheet(
       context: context,
@@ -413,7 +467,14 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       isRadioButtonChecked = isRadioButton;
       blueMarkerLocation = null;
       polygonPoints.clear();
-      showAreaButtons = false;
+      showAreaButtons = false; // Ocultar los botones al seleccionar un área
+      _updateGeocercaInfoVisibility();
+    });
+  }
+
+  void _updateGeocercaInfoVisibility() {
+    setState(() {
+      hasSelectedGeocerca = blueMarkerLocation != null || polygonPoints.isNotEmpty;
     });
   }
 
@@ -463,8 +524,12 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                             blueMarkerLocation = newPosition;
                           });
                         },
-                        onTap: () => _showDeleteOption(blueMarkerLocation!,
-                            isBlueMarker: true),
+                        onTap: () {
+                          _showDeleteOption(blueMarkerLocation!, isBlueMarker: true);
+                          setState(() {
+                            showAreaButtons = false; // Ocultar los botones
+                          });
+                        },
                         onDragEnd: (newPosition) {
                           setState(() {
                             blueMarkerLocation = newPosition;
@@ -484,7 +549,12 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                             BitmapDescriptor.hueBlue,
                           ),
                           draggable: true,
-                          onTap: () => _showDeleteOption(point),
+                          onTap: () {
+                            _showDeleteOption(point);
+                            setState(() {
+                              showAreaButtons = false; // Ocultar los botones
+                            });
+                          },
                           onDragStart: (newPosition) {
                             setState(() {
                               movingPoint = point;
@@ -536,6 +606,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                         _slideController.reverse();
                         hasSelectedGeocerca = false;
                       }
+                      showAreaButtons = false; // Ocultar los botones al insertar un marcador
                     });
                   },
                 ),
@@ -562,7 +633,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                       color: Colors.purple,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.purple.shade900,
+                        color: Colors.purpleAccent,
                         width: 3.0,
                       ),
                     ),
@@ -595,75 +666,72 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                 ],
               ),
             ),
+          Stack(
+            children: [
+              AnimatedPositioned(
+                duration: Duration(milliseconds: 300),
+                top: 20.0,
+                right: showAreaButtons ? 80.0 : 20.0,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    selectArea(true);
+                  },
+                  child: Icon(Icons.radio_button_checked),
+                  backgroundColor: isRadioButtonChecked ? Colors.lightBlueAccent : Colors.blue,
+                  shape: CircleBorder(),
+                ),
+              ),
+              AnimatedPositioned(
+                duration: Duration(milliseconds: 300),
+                top: 20.0,
+                right: showAreaButtons ? 140.0 : 20.0,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    selectArea(false);
+                  },
+                  child: Icon(Icons.add_location_alt),
+                  backgroundColor: !isRadioButtonChecked ? Colors.lightBlueAccent : Colors.blue,
+                  shape: CircleBorder(),
+                ),
+              ),
+            ],
+          ),
           Positioned(
             top: 20,
             right: 20,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (showAreaButtons)
-                      Row(
-                        children: [
-                          SlideTransition(
-                            position: _slideAnimation,
-                            child: FloatingActionButton(
-                              onPressed: () {
-                                selectArea(true);
-                              },
-                              child: Icon(Icons.radio_button_checked),
-                              backgroundColor: Colors.blue,
-                              shape: CircleBorder(),
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          SlideTransition(
-                            position: _slideAnimation,
-                            child: FloatingActionButton(
-                              onPressed: () {
-                                selectArea(false);
-                              },
-                              child: Icon(Icons.add_location_alt),
-                              backgroundColor: Colors.blue,
-                              shape: CircleBorder(),
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                        ],
-                      ),
-                    FloatingActionButton(
-                      onPressed: () {
-                        toggleAreaButtons();
-                        if (showAreaButtons) {
-                          _slideController.forward();
-                        } else {
-                          _slideController.reverse();
-                        }
-                      },
-                      child: Icon(Icons.tune),
-                      backgroundColor: Colors.blue,
-                      shape: CircleBorder(),
-                    ),
-                  ],
+                FloatingActionButton(
+                  onPressed: () {
+                    toggleAreaButtons();
+                  },
+                  child: Icon(Icons.crop_rotate), // Icono de configuración
+                  backgroundColor: Colors.blue,
+                  shape: CircleBorder(),
                 ),
                 SizedBox(height: 16),
                 FloatingActionButton(
                   onPressed: () {
                     modalGuardarGeocerca();
+                    setState(() {
+                      showAreaButtons = false; // Ocultar los botones
+                    });
                   },
                   child: Icon(Icons.save),
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.lightGreenAccent,
                   shape: CircleBorder(),
                 ),
                 SizedBox(height: 16),
                 FloatingActionButton(
                   onPressed: () {
                     showGeocercasModal(context);
+                    setState(() {
+                      showAreaButtons = false; // Ocultar los botones
+                    });
                   },
                   child: Icon(Icons.view_list),
-                  backgroundColor: Colors.deepPurpleAccent,
+                  backgroundColor: Colors.purpleAccent,
                   shape: CircleBorder(),
                 ),
               ],
