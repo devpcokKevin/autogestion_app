@@ -9,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:dio/dio.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'components/address_info.dart';
 import '../../shared/appbar.dart';
@@ -30,6 +31,8 @@ class GoogleMapScreen extends StatefulWidget {
 }
 
 class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProviderStateMixin {
+
+
   final Completer<GoogleMapController> _controller = Completer();
   BitmapDescriptor markerbitmap = BitmapDescriptor.defaultMarker;
 
@@ -42,6 +45,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   bool isRadioButtonChecked = true;
   bool resetCircleRadius = false; // Bandera para restablecer el radio
   bool showAreaButtons = false; // Mostrar/ocultar los botones
+  bool isSaveButtonEnabled = false; // Estado del botón de guardar
 
   TextEditingController areaNameController = TextEditingController();
   TextEditingController areaDescriptionController = TextEditingController();
@@ -104,6 +108,12 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
     super.dispose();
   }
 
+  void _updateSaveButtonState() {
+    setState(() {
+      isSaveButtonEnabled = blueMarkerLocation != null || polygonPoints.isNotEmpty;
+    });
+  }
+
   String selectedGeocercaNombre = '';
   String selectedGeocercaDescripcion = '';
 
@@ -116,6 +126,8 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
           polygonPoints[index] = newPosition;
           movingPoint = newPosition;
         }
+        hasSelectedGeocerca = false; // Esconder la información de geocerca
+        _updateSaveButtonState();
       }
     });
   }
@@ -124,8 +136,10 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   void _finalizeMovingPoint() {
     setState(() {
       movingPoint = null;
+      hasSelectedGeocerca = false; // Esconder la información de geocerca
     });
     _updateGeocercaInfoVisibility();
+    _updateSaveButtonState();
   }
 
   // Agrega un nuevo punto al polígono.
@@ -134,6 +148,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       polygonPoints.add(point);
     });
     _updateGeocercaInfoVisibility();
+    _updateSaveButtonState();
   }
 
   // Elimina un punto del polígono.
@@ -141,8 +156,10 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
     setState(() {
       polygonPoints.remove(point);
       movingPoint = null;
+      hasSelectedGeocerca = false; // Esconder la información de geocerca
     });
     _updateGeocercaInfoVisibility();
+    _updateSaveButtonState();
   }
 
   void _showDeleteOption(LatLng point, {bool isBlueMarker = false}) {
@@ -162,10 +179,14 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                       blueMarkerLocation = null;
                       resetCircleRadius = true; // Activar la bandera para restablecer el radio
                       showAreaButtons = false; // Ocultar los botones
+                      hasSelectedGeocerca = false; // Esconder la información de geocerca
+                      _updateSaveButtonState();
                     });
                   } else {
                     _removePolygonPoint(point);
                     showAreaButtons = false; // Ocultar los botones
+                    hasSelectedGeocerca = false; // Esconder la información de geocerca
+                    _updateSaveButtonState();
                   }
                 },
               ),
@@ -228,6 +249,8 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   void modalGuardarGeocerca() async {
     setState(() {
       showAreaButtons = false; // Ocultar los botones
+      areaNameController.clear(); // Limpiar el campo de nombre
+      areaDescriptionController.clear(); // Limpiar el campo de descripción
     });
     return showDialog(
       context: context,
@@ -263,13 +286,18 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             ),
             TextButton(
               child: Text("Guardar"),
-              onPressed: () {
+              onPressed: isSaveButtonEnabled
+                  ? () {
                 if (isRadioButtonChecked && blueMarkerLocation != null) {
                   _saveCircleArea();
                 } else {
                   _savePolygonPoints();
                 }
-              },
+              }
+                  : null,
+              style: TextButton.styleFrom(
+                foregroundColor: isSaveButtonEnabled ? Colors.lightGreen : Colors.grey,
+              ),
             ),
           ],
         );
@@ -280,16 +308,20 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   // Método para enviar los datos del área al servidor
   void _sendAreaDataToServer(String geocerca_nombre, String geocerca_descripcion,
       List<Map<String, dynamic>> data_delimitador) async {
+
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
     var dio = Dio();
     var url = '$baseUrl/api/Geocerca/regGeocercaDelimitador';
-    var datageo = {
-      "empresa_codigo": "20354561124",
+
+    var empresa_codigo = prefs.get("empresa_codigo");
+    var data = {
+      "empresa_codigo": empresa_codigo,
       "geocerca_nombre": geocerca_nombre,
       "geocerca_descripcion": geocerca_descripcion,
       "data_delimitador": data_delimitador
     };
-
-    print(datageo);
 
     try {
       final response = await dio.post(
@@ -299,13 +331,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             "Content-Type": "application/json",
           },
         ),
-        data: datageo,
+        data: data,
       );
 
       if (response.statusCode == 200) {
-        print('---------------------------------------------------');
         print('Respuesta del servidor: ${response.data}');
-        print('---------------------------------------------------');
       } else {
         print('Error: ${response.statusCode}');
         print('Error: ${response}');
@@ -343,14 +373,20 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Future<void> postSelectedGeocerca(String geocercaId) async {
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
     var dio = Dio();
     (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
       client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
       return client;
     };
+
     var url = '$baseUrl/api/Geocerca/listGeocercaDelimitador';
+    var empresa_codigo = prefs.get("empresa_codigo");
+
     var data = {
-      "empresa_codigo": "20354561124",
+      "empresa_codigo": empresa_codigo,
       "geocerca_id": geocercaId,
     };
     try {
@@ -362,27 +398,36 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
         if (responseData.containsKey('item3') &&
             responseData['item3'].containsKey('data_delimitador')) {
           List delimiters = responseData['item3']['data_delimitador'];
+          print (delimiters);
           for (var delimiter in delimiters) {
-            double lat = double.parse(delimiter['delimitador_latitud']);
-            double lng = double.parse(delimiter['delimitador_longitud']);
-            if (delimiter['delimitador_radio'] != null) {
-              // Es un área circular
-              setState(() {
-                blueMarkerLocation = LatLng(lat, lng);
-                circleRadius = double.parse(delimiter['delimitador_radio']);
-                isRadioButtonChecked = true;
-              });
-            } else {
-              // Es un polígono
-              _addPolygonPoint(LatLng(lat, lng));
+            try {
+              double lat = double.parse(delimiter['delimitador_latitud']);
+              double lng = double.parse(delimiter['delimitador_longitud']);
+
+              if (delimiter['delimitador_radio'] != null && delimiter['delimitador_radio'] != '') {
+                // Es un área circular
+                double radius = double.parse(delimiter['delimitador_radio']);
+                setState(() {
+                  blueMarkerLocation = LatLng(lat, lng);
+                  circleRadius = radius;
+                  isRadioButtonChecked = true;
+                  hasSelectedGeocerca = true;
+                });
+              } else {
+                // Es un polígono
+                setState(() {
+                  _addPolygonPoint(LatLng(lat, lng));
+                  isRadioButtonChecked = false;
+                  hasSelectedGeocerca = true;
+                });
+              }
+            } catch (e) {
+              print('Error al convertir coordenadas: $e');
             }
           }
         }
-        setState(() {
-          hasSelectedGeocerca = true;
-          showAreaButtons = false; // Ocultar los botones
-        });
         _slideController.forward();
+        _updateSaveButtonState();
       } else {
         print('Error en la solicitud: ${response.statusCode}');
       }
@@ -391,13 +436,21 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
     }
   }
 
+  double parseCoordinate(String coord) {
+    try {
+      return double.parse(coord.replaceAll(',', '.'));
+    } catch (e) {
+      print('Error al convertir coordenada: $e');
+      throw FormatException('Invalid coordinate format');
+    }
+  }
+
   void showGeocercasModal(BuildContext context) async {
     setState(() {
       showAreaButtons = false; // Ocultar los botones
     });
     List<Map<String, dynamic>> geocercas = await fetchGeocercas();
-    print("--------------------------------------------------------------");
-    print(geocercas);
+
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -429,8 +482,6 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                         setState(() {
                           selectedGeocercaNombre = nombre;
                           selectedGeocercaDescripcion = descripcion;
-                          print("geocerca nombre: $selectedGeocercaNombre");
-                          print("geocerca descripcion: $selectedGeocercaDescripcion");
                         });
                         Navigator.pop(context, geocercas[index]['geocercaSelect_id']);
                       },
@@ -450,7 +501,6 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       },
     ).then((selectedGeocercaId) async {
       if (selectedGeocercaId != null) {
-        print('Geocerca seleccionada con ID: $selectedGeocercaId');
         await postSelectedGeocerca(selectedGeocercaId);
       }
     });
@@ -469,6 +519,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       polygonPoints.clear();
       showAreaButtons = false; // Ocultar los botones al seleccionar un área
       _updateGeocercaInfoVisibility();
+      _updateSaveButtonState();
     });
   }
 
@@ -510,6 +561,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                         setState(() {
                           initialLocation = newPosition;
                         });
+                        _updateSaveButtonState();
                       },
                       icon: BitmapDescriptor.defaultMarkerWithHue(
                           BitmapDescriptor.hueRed),
@@ -523,6 +575,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                           setState(() {
                             blueMarkerLocation = newPosition;
                           });
+                          _updateSaveButtonState();
                         },
                         onTap: () {
                           _showDeleteOption(blueMarkerLocation!, isBlueMarker: true);
@@ -533,13 +586,18 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                         onDragEnd: (newPosition) {
                           setState(() {
                             blueMarkerLocation = newPosition;
+                            hasSelectedGeocerca = false; // Esconder la información de geocerca
                           });
+                          _updateSaveButtonState();
                         },
                         icon: BitmapDescriptor.defaultMarkerWithHue(
                             BitmapDescriptor.hueBlue),
                       ),
                     if (!isRadioButtonChecked)
-                      ...polygonPoints.asMap().entries.map((entry) {
+                      ...polygonPoints
+                          .asMap()
+                          .entries
+                          .map((entry) {
                         final index = entry.key;
                         final point = entry.value;
                         return Marker(
@@ -607,6 +665,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                         hasSelectedGeocerca = false;
                       }
                       showAreaButtons = false; // Ocultar los botones al insertar un marcador
+                      _updateSaveButtonState();
                     });
                   },
                 ),
@@ -658,6 +717,8 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                         onChanged: (value) {
                           setState(() {
                             circleRadius = value;
+                            hasSelectedGeocerca = false; // Esconder la información de geocerca
+                            _updateSaveButtonState();
                           });
                         },
                       ),
@@ -719,7 +780,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                     });
                   },
                   child: Icon(Icons.save),
-                  backgroundColor: Colors.lightGreenAccent,
+                  backgroundColor: isSaveButtonEnabled ? Colors.lightGreenAccent : Colors.grey,
                   shape: CircleBorder(),
                 ),
                 SizedBox(height: 16),

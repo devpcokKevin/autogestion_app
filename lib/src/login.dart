@@ -201,13 +201,10 @@ class LoginFormState extends State<LoginForm> {
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         String datosUsuarioJson = jsonEncode(rpta.data['datosUsuario']);
                         await prefs.setString('razon_social', rpta.data['razonSocial']);
-                        // await prefs.setString('empresa_codigo', rpta.data['empresa_codigo']);
                         await prefs.setString('tokenVerificador', rpta.data['idToken']);
-                        // await prefs.setString('empresa_codigo', rpta.data['empresaCodigo']);
+                        await prefs.setString('empresa_codigo', rpta.data['empresaCodigo']);
                         await prefs.setString('datosUsuario', datosUsuarioJson);
                         await prefs.setString('token', rpta.data['captcha']);
-                        print('user phone bdd' + user_phone_id);
-                        print('user phone android' + _deviceIdentifier);
                         if ("TP1A.220905.001" == "TP1A.220905.001") {
                           SharedPreferences prefs = await SharedPreferences.getInstance();
                           await prefs.setString('token', rpta.data['captcha']);
@@ -227,9 +224,6 @@ class LoginFormState extends State<LoginForm> {
                           );
                         }
                       }, onError: (error) {
-
-                        // Navigator.push(context, MaterialPageRoute(builder: (context) => EntryPoint()));
-                        print("TERRIBLE ");
 
                         Fluttertoast.showToast(
                           msg: "Error de conexion: " + (error as DioError).response.toString(),
