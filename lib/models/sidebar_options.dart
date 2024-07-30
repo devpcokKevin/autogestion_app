@@ -53,7 +53,7 @@ List<MenuOption> sideMenu2 = [
     view: miHorarioScreen(appBarTitle: "Mi Horario", appBarIcon: Icons.calendar_month), // Reemplaza con la vista correspondiente si es necesario
   ),
   MenuOption(
-    icon: Icons.notifications,
+    icon: Icons.location_on,
     title: "Geocerca",
     view: GoogleMapScreen(appBarTitle: "Geocerca", appBarIcon: Icons.location_on), // Reemplaza con la vista correspondiente si es necesario
   ),
