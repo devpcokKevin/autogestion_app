@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:autogestion/screens/asistencia/asistencia.dart';
 import 'package:autogestion/screens/geocerca/geocerca_screen.dart';
 import 'package:autogestion/screens/miHorario/mi_horario_screen.dart';
 import 'package:dio/adapter.dart';
@@ -55,7 +56,12 @@ List<MenuOption> sideMenu2 = [
   MenuOption(
     icon: Icons.location_on,
     title: "Geocerca",
-    view: GoogleMapScreen(appBarTitle: "Geocerca", appBarIcon: Icons.location_on), // Reemplaza con la vista correspondiente si es necesario
+    view: GeocercaScreen(appBarTitle: "Geocerca", appBarIcon: Icons.location_on), // Reemplaza con la vista correspondiente si es necesario
+  ),
+  MenuOption(
+    icon: Icons.event_available,
+    title: "Asistencia",
+    view: AsistenciaScreen(appBarTitle: "Asistencia", appBarIcon: Icons.event_available), // Reemplaza con la vista correspondiente si es necesario
   ),
 ];
 

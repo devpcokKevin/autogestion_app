@@ -13,21 +13,21 @@ import '../../shared/appbar.dart';
 import 'components/geocerca_info.dart';
 import '../../Enviroment/Variables.dart';
 
-class GoogleMapScreen extends StatefulWidget {
+class GeocercaScreen extends StatefulWidget {
   final String appBarTitle;
   final IconData appBarIcon;
 
-  const GoogleMapScreen({
+  const GeocercaScreen({
     Key? key,
     required this.appBarTitle,
     required this.appBarIcon,
   }) : super(key: key);
 
   @override
-  State<GoogleMapScreen> createState() => _GoogleMapScreenState();
+  State<GeocercaScreen> createState() => _GeocercaScreenState();
 }
 
-class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProviderStateMixin {
+class _GeocercaScreenState extends State<GeocercaScreen> with SingleTickerProviderStateMixin {
   final Completer<GoogleMapController> _controller = Completer();
   Location location = Location();
   BitmapDescriptor markerbitmap = BitmapDescriptor.defaultMarker;
@@ -59,6 +59,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
+    // Inicializa el controlador de animación y la animación de desplazamiento
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -74,7 +75,8 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Future<void> _initializeLocation() async {
-    if (!locationFetched) { // Verificar si ya se ha obtenido la ubicación
+    // Verifica y solicita permisos de ubicación, y obtiene la ubicación actual del dispositivo
+    if (!locationFetched) {
       try {
         bool serviceEnabled = await location.serviceEnabled();
         if (!serviceEnabled) {
@@ -105,6 +107,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
 
   @override
   void dispose() {
+    // Libera recursos cuando la pantalla se destruye
     _slideController.dispose();
     areaNameController.dispose();
     areaDescriptionController.dispose();
@@ -113,16 +116,18 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    // Muestra un indicador de progreso mientras se obtiene la ubicación
     if (!locationFetched) {
       return Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    return _buildGoogleMap(context);
+    return _buildGeocerca(context);
   }
 
-  Widget _buildGoogleMap(BuildContext context) {
+  Widget _buildGeocerca(BuildContext context) {
+    // Construye la interfaz principal que incluye el mapa y las opciones de geocerca
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: CustomAppBar(
@@ -146,10 +151,10 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                   },
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
-                  markers: _buildMarkers(),
-                  polygons: _buildPolygons(),
-                  circles: _buildCircles(),
-                  onTap: _handleMapTap,
+                  markers: _buildMarkers(), // Construye los marcadores en el mapa
+                  polygons: _buildPolygons(), // Construye los polígonos en el mapa
+                  circles: _buildCircles(), // Construye los círculos en el mapa
+                  onTap: _handleMapTap, // Maneja los toques en el mapa
                 ),
               ),
               if (hasSelectedGeocerca)
@@ -159,15 +164,16 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                 ),
             ],
           ),
-          _buildRadiusSlider(),
-          _buildAreaButtons(),
-          _buildActionButtons(),
+          _buildRadiusSlider(), // Construye el control deslizante para el radio del círculo
+          _buildAreaButtons(), // Construye los botones para seleccionar área de geocerca
+          _buildActionButtons(), // Construye los botones de acción
         ],
       ),
     );
   }
 
   Set<Marker> _buildMarkers() {
+    // Construye los marcadores para el mapa
     final markers = <Marker>{};
 
     if (isRadioButtonChecked && blueMarkerLocation != null) {
@@ -176,8 +182,8 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
           markerId: const MarkerId("blueMarker"),
           draggable: isGeocercaSelected ? isEditMode : true,
           position: blueMarkerLocation!,
-          onDrag: _handleMarkerDrag,
-          onTap: _handleMarkerTap,
+          onDrag: _handleMarkerDrag, // Maneja el arrastre del marcador
+          onTap: _handleMarkerTap, // Maneja el toque en el marcador
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
       );
@@ -191,7 +197,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             position: point,
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
             draggable: isGeocercaSelected ? isEditMode : true,
-            onTap: () => _showDeleteOption(point),
+            onTap: () => _showDeleteOption(point), // Muestra opciones de eliminación para el punto
             onDragStart: (newPosition) {
               if (isGeocercaSelected ? isEditMode : true) {
                 setState(() {
@@ -201,8 +207,8 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             },
             onDragEnd: (newPosition) {
               if (isGeocercaSelected ? isEditMode : true) {
-                _updateMovingPointPosition(newPosition);
-                _finalizeMovingPoint();
+                _updateMovingPointPosition(newPosition); // Actualiza la posición del punto en movimiento
+                _finalizeMovingPoint(); // Finaliza el movimiento del punto
               }
             },
           ),
@@ -214,6 +220,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Set<Polygon> _buildPolygons() {
+    // Construye los polígonos en el mapa
     if (!isRadioButtonChecked && polygonPoints.length >= 3) {
       return {
         Polygon(
@@ -229,6 +236,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Set<Circle> _buildCircles() {
+    // Construye los círculos en el mapa
     if (isRadioButtonChecked && blueMarkerLocation != null) {
       return {
         Circle(
@@ -245,6 +253,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _handleMapTap(LatLng point) {
+    // Maneja los toques en el mapa para agregar un marcador o punto de polígono
     if (!isGeocercaSelected || (isGeocercaSelected && isEditMode)) {
       setState(() {
         if (isRadioButtonChecked) {
@@ -267,6 +276,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _handleMarkerDrag(LatLng newPosition) {
+    // Maneja el arrastre de un marcador para cambiar su posición
     if (isGeocercaSelected ? isEditMode : true) {
       setState(() {
         blueMarkerLocation = newPosition;
@@ -276,6 +286,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _handleMarkerTap() {
+    // Muestra opciones para eliminar un marcador al tocarlo
     if (isGeocercaSelected ? isEditMode : true) {
       _showDeleteOption(blueMarkerLocation!, isBlueMarker: true);
       setState(() {
@@ -285,6 +296,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Widget _buildRadiusSlider() {
+    // Muestra un control deslizante para ajustar el radio de un círculo alrededor de un marcador
     if (!isRadioButtonChecked || blueMarkerLocation == null) return Container();
 
     return Positioned(
@@ -338,6 +350,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Widget _buildAreaButtons() {
+    // Muestra los botones para seleccionar el tipo de área (círculo o polígono)
     return Stack(
       children: [
         AnimatedPositioned(
@@ -379,6 +392,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Widget _buildActionButtons() {
+    // Muestra los botones de acción (guardar, editar, ver lista)
     return Positioned(
       top: 60,
       right: 20,
@@ -390,7 +404,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             height: 60,
             child: FloatingActionButton(
               onPressed: () {
-                toggleAreaButtons();
+                toggleAreaButtons(); // Alterna la visibilidad de los botones de área
               },
               child: Icon(Icons.crop_rotate),
               backgroundColor: Colors.blue,
@@ -404,11 +418,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
               onPressed: isSaveButtonEnabled
                   ? () {
                 if (isGeocercaSelected && !isEditMode) {
-                  _toggleEditMode();
+                  _toggleEditMode(); // Activa el modo de edición
                 } else if (isEditMode) {
-                  modalEditarGeocerca();
+                  modalEditarGeocerca(); // Abre el modal para editar la geocerca
                 } else {
-                  modalGuardarGeocerca();
+                  modalGuardarGeocerca(); // Abre el modal para guardar la geocerca
                 }
               }
                   : null,
@@ -422,7 +436,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             height: 60,
             child: FloatingActionButton(
               onPressed: () {
-                showGeocercasModal(context);
+                showGeocercasModal(context); // Muestra el modal de lista de geocercas
                 setState(() {
                   showAreaButtons = false;
                 });
@@ -438,6 +452,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _updateSaveButtonState() {
+    // Actualiza el estado del botón de guardar según la selección actual
     setState(() {
       isSaveButtonEnabled = blueMarkerLocation != null || polygonPoints.length >= 3;
     });
@@ -448,6 +463,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   String? selectedGeocercaId;
 
   void _updateMovingPointPosition(LatLng newPosition) {
+    // Actualiza la posición del punto en movimiento
     setState(() {
       if (movingPoint != null) {
         final index = polygonPoints.indexOf(movingPoint!);
@@ -462,6 +478,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _finalizeMovingPoint() {
+    // Finaliza el movimiento del punto y actualiza la visibilidad de la información de la geocerca
     setState(() {
       movingPoint = null;
       hasSelectedGeocerca = false;
@@ -471,6 +488,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _addPolygonPoint(LatLng point) {
+    // Añade un nuevo punto al polígono
     setState(() {
       polygonPoints.add(point);
     });
@@ -479,6 +497,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _removePolygonPoint(LatLng point) {
+    // Elimina un punto del polígono
     setState(() {
       polygonPoints.remove(point);
       movingPoint = null;
@@ -489,6 +508,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _showDeleteOption(LatLng point, {bool isBlueMarker = false}) {
+    // Muestra las opciones para eliminar un punto o marcador
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -521,7 +541,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                 title: Text('Eliminar todos los puntos'),
                 onTap: () {
                   Navigator.pop(context);
-                  _removeAllPoints();
+                  _removeAllPoints(); // Elimina todos los puntos del polígono
                   showAreaButtons = false;
                   hasSelectedGeocerca = false;
                   _updateSaveButtonState();
@@ -535,6 +555,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _removeAllPoints() {
+    // Elimina todos los puntos y resetea el estado
     setState(() {
       blueMarkerLocation = null;
       polygonPoints.clear();
@@ -546,6 +567,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _savePolygonPoints() async {
+    // Guarda los puntos del polígono en el servidor
     String geocerca_nombre = selectedGeocercaNombre;
     String geocerca_descripcion = selectedGeocercaDescripcion;
 
@@ -562,6 +584,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _saveCircleArea() async {
+    // Guarda el área circular en el servidor
     String geocerca_nombre = selectedGeocercaNombre;
     String geocerca_descripcion = selectedGeocercaDescripcion;
 
@@ -578,6 +601,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void modalGuardarGeocerca() async {
+    // Muestra el modal para guardar una nueva geocerca
     setState(() {
       showAreaButtons = false;
       areaNameController.clear();
@@ -626,9 +650,9 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                     selectedGeocercaId = null;
                   });
                   if (isRadioButtonChecked && blueMarkerLocation != null) {
-                    _saveCircleArea();
+                    _saveCircleArea(); // Guarda un área circular
                   } else {
-                    _savePolygonPoints();
+                    _savePolygonPoints(); // Guarda un área de polígono
                   }
                   Navigator.of(context).pop();
                 }
@@ -645,6 +669,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void modalEditarGeocerca() async {
+    // Muestra el modal para editar una geocerca existente
     setState(() {
       showAreaButtons = false;
       areaNameController.text = selectedGeocercaNombre;
@@ -692,9 +717,9 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                     selectedGeocercaDescripcion = areaDescriptionController.text;
                   });
                   if (isRadioButtonChecked && blueMarkerLocation != null) {
-                    _saveCircleArea();
+                    _saveCircleArea(); // Guarda el área circular editada
                   } else {
-                    _savePolygonPoints();
+                    _savePolygonPoints(); // Guarda los puntos del polígono editados
                   }
                   Navigator.of(context).pop();
                 }
@@ -711,6 +736,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _sendAreaDataToServer(String geocerca_nombre, String geocerca_descripcion, List<Map<String, dynamic>> data_delimitador, String? geocercaId) async {
+    // Envía los datos del área al servidor para guardarlos o actualizarlos
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var dio = Dio();
     var url = geocercaId != null
@@ -743,7 +769,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
       if (response.statusCode == 200) {
         print('Respuesta del servidor: ${response.data}');
         Fluttertoast.showToast(msg: 'Geocerca guardada');
-        await fetchGeocercas();
+        await fetchGeocercas(); // Obtiene la lista actualizada de geocercas
       } else {
         print('Error: ${response.statusCode}');
         print('Error: ${response}');
@@ -756,6 +782,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Future<void> fetchGeocercas() async {
+    // Obtiene la lista de geocercas del servidor
     var dio = Dio();
     (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
       client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
@@ -791,6 +818,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   Future<void> postSelectedGeocerca(String geocercaId) async {
+    // Envía la geocerca seleccionada al servidor y la muestra en el mapa
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     var dio = Dio();
@@ -853,7 +881,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
               print('Error al convertir coordenadas: $e');
             }
           }
-          _moveCameraToBounds(bounds);
+          _moveCameraToBounds(bounds); // Mueve la cámara a los límites de la geocerca
         }
         _slideController.forward();
         _updateSaveButtonState();
@@ -866,6 +894,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   LatLngBounds _getLatLngBounds(List delimiters) {
+    // Obtiene los límites del LatLng para ajustar la vista del mapa
     double minLat = double.infinity;
     double maxLat = -double.infinity;
     double minLng = double.infinity;
@@ -888,11 +917,13 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _moveCameraToBounds(LatLngBounds bounds) async {
+    // Mueve la cámara del mapa a los límites de la geocerca
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
   }
 
   double parseCoordinate(String coord) {
+    // Convierte una coordenada en formato de texto a double
     try {
       return double.parse(coord.replaceAll(',', '.'));
     } catch (e) {
@@ -902,6 +933,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void showGeocercasModal(BuildContext context) async {
+    // Muestra el modal con la lista de geocercas
     setState(() {
       showAreaButtons = false;
     });
@@ -941,7 +973,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
                               Text(nombre),
                               IconButton(
                                 icon: Icon(Icons.delete, color: Colors.redAccent),
-                                onPressed: () => _confirmDeleteGeocerca(context, geocercas[index]['geocercaSelect_id'], setState),
+                                onPressed: () => _confirmDeleteGeocerca(context, geocercas[index]['geocercaSelect_id'], setState), // Confirma la eliminación de la geocerca
                               ),
                             ],
                           ),
@@ -976,6 +1008,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _confirmDeleteGeocerca(BuildContext context, String geocercaId, StateSetter setState) {
+    // Muestra un cuadro de diálogo de confirmación para eliminar una geocerca
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -992,7 +1025,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
             TextButton(
               child: Text("Eliminar"),
               onPressed: () {
-                _deleteGeocerca(geocercaId, setState);
+                _deleteGeocerca(geocercaId, setState); // Elimina la geocerca
                 Navigator.of(context).pop();
               },
             ),
@@ -1003,13 +1036,14 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _deleteGeocerca(String geocercaId, StateSetter setState) async {
+    // Elimina una geocerca del servidor
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var dio = Dio();
     var url = '$baseUrl/api/Geocerca/delGeocercaDelimitador';
-    var empresa_codigo = prefs.get("empresa_codigo");
+    var empresaCodigo = prefs.get("empresa_codigo");
 
     var data = {
-      "empresa_codigo": empresa_codigo,
+      "empresa_codigo": empresaCodigo,
       "geocerca_id": geocercaId,
     };
 
@@ -1041,12 +1075,14 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void toggleAreaButtons() {
+    // Alterna la visibilidad de los botones de selección de área
     setState(() {
       showAreaButtons = !showAreaButtons;
     });
   }
 
   void selectArea(bool isRadioButton) {
+    // Selecciona el tipo de área (círculo o polígono)
     setState(() {
       isRadioButtonChecked = isRadioButton;
       blueMarkerLocation = null;
@@ -1060,12 +1096,14 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> with SingleTickerProv
   }
 
   void _updateGeocercaInfoVisibility() {
+    // Actualiza la visibilidad de la información de la geocerca
     setState(() {
       hasSelectedGeocerca = blueMarkerLocation != null || polygonPoints.isNotEmpty;
     });
   }
 
   void _toggleEditMode() {
+    // Alterna el modo de edición
     setState(() {
       isEditMode = !isEditMode;
       if (!isEditMode) {
