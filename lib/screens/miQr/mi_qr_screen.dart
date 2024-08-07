@@ -17,9 +17,6 @@ class QrScreen extends StatefulWidget {
   State<QrScreen> createState() => _QrScreenState();
 }
 
-
-
-
 class _QrScreenState extends State<QrScreen> {
   final GlobalKey globalKey = GlobalKey();
 
@@ -38,7 +35,6 @@ class _QrScreenState extends State<QrScreen> {
   }
 
   Future<void> _loadUserData() async {
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? razonSocialPref = prefs.getString('razon_social');
     String tokenVerificador = prefs.getString("tokenVerificador")!;
@@ -46,7 +42,7 @@ class _QrScreenState extends State<QrScreen> {
 
     Map<String, dynamic> tokenMapId = JwtDecoder.decode(tokenVerificador);
 
-    print('token XD: '+tokenMapId.toString());
+    print('token XD: ' + tokenMapId.toString());
 
     if (razonSocialPref != null) {
       setState(() {
@@ -58,12 +54,10 @@ class _QrScreenState extends State<QrScreen> {
       Map<String, dynamic> datosUsuario = jsonDecode(datosUsuarioJson);
 
       setState(() {
-
         usuarioNombre = datosUsuario['usuario_nombre'];
         usuarioCargo = datosUsuario['usuario_cargo'];
         usuarioId = datosUsuario['usuario_id'];
         this.qrData = tokenVerificador;
-
       });
     }
   }
@@ -160,24 +154,28 @@ class _QrScreenState extends State<QrScreen> {
                         ),
                         SizedBox(width: 20),
                         ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
+                            SharedPreferences prefs = await SharedPreferences.getInstance();
+                            var datosUsuario = prefs.getString("datosUsuario");
+
                             Dio dio = new Dio();
                             var url = '$baseUrl/api/UsuarioL/renovarToken';
                             dio
                                 .post(
-                              data: url,
+                              data: datosUsuario,
                               url,
-                              options: Options(headers: {"Content-Type": "application/json"}),
+                              options: Options(
+                                headers: {"Content-Type": "application/json"},
+                              ),
                             )
                                 .then(
-                                  (response) async {
+                              (response) async {
                                 print('SE LOGRO: ' + response.data.toString());
                                 SharedPreferences prefs = await SharedPreferences.getInstance();
                                 prefs.setString("tokenVerificador", response.data.toString());
                               },
                             ).catchError(
-                                  (error) {
-
+                              (error) {
                                 if (error is DioError) {
                                   print('Error de red: ' + error.response.toString());
                                 } else {
@@ -218,4 +216,3 @@ class _QrScreenState extends State<QrScreen> {
     );
   }
 }
-
